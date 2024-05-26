@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "7e6e0223ab3b43a8bb7b6fc5b70bd609",
+    "content-hash": "fea1d9b4e9be76339705333978bd2a83",
     "packages": [
         {
             "name": "astrotomic/laravel-translatable",
@@ -98,6 +98,51 @@
                 }
             ],
             "time": "2024-04-17T11:57:21+00:00"
+        },
+        {
+            "name": "bagisto/bagisto-package-generator",
+            "version": "v2.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/bagisto/bagisto-package-generator.git",
+                "reference": "84a0fe962e2bf139449e96d542c5a791a8c30f68"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/bagisto/bagisto-package-generator/zipball/84a0fe962e2bf139449e96d542c5a791a8c30f68",
+                "reference": "84a0fe962e2bf139449e96d542c5a791a8c30f68",
+                "shasum": ""
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Webkul\\PackageGenerator\\Providers\\PackageGeneratorServiceProvider"
+                    ],
+                    "aliases": []
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Webkul\\PackageGenerator\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Jitendra Singh",
+                    "email": "jitendra@webkul.com"
+                }
+            ],
+            "description": "Bagisto Package Generator",
+            "support": {
+                "issues": "https://github.com/bagisto/bagisto-package-generator/issues",
+                "source": "https://github.com/bagisto/bagisto-package-generator/tree/v2.0.0"
+            },
+            "time": "2024-02-14T14:26:21+00:00"
         },
         {
             "name": "barryvdh/laravel-dompdf",
