@@ -16,6 +16,16 @@ return [
             'driver'   => 'session',
             'provider' => 'admins',
         ],
+        'api' => [
+            'driver'   => 'jwt',
+            'provider' => 'customer',
+        ],
+
+        'admin-api' => [
+            'driver'   => 'jwt',
+            'provider' => 'admin',
+        ],
+
     ],
 
     'providers' => [
@@ -28,6 +38,17 @@ return [
             'driver' => 'eloquent',
             'model'  => Webkul\User\Models\Admin::class,
         ],
+
+        'customer' => [
+            'driver' => 'eloquent',
+            'model'  => Webkul\GraphQLAPI\Models\Customer\Customer::class,
+        ],
+
+        'admin' => [
+            'driver' => 'eloquent',
+            'model'  =>  Webkul\GraphQLAPI\Models\Admin\Admin::class,
+        ],
+
     ],
 
     'passwords' => [
