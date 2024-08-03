@@ -420,8 +420,6 @@ return [
                 'mobile' => [
                     'currencies' => 'Para Birimleri',
                     'locales'    => 'Yerel Ayarlar',
-                    'login'      => 'Kaydol veya Giriş yap
-',
                 ],
             ],
 

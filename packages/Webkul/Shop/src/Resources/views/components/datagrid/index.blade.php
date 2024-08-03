@@ -411,7 +411,6 @@
                      * listen to it and update its properties accordingly.
                      */
                      this.$emitter.emit('change-datagrid', {
-                        src: this.src,
                         available: this.available,
                         applied: this.applied
                     });
