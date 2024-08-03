@@ -14,16 +14,14 @@ class InventorySourcesDataGrid extends DataGrid
      */
     public function prepareQueryBuilder()
     {
-        $queryBuilder = DB::table('inventory_sources')
-            ->addSelect(
+        return DB::table('inventory_sources')
+            ->select(
                 'id',
                 'code',
                 'name',
                 'priority',
                 'status'
             );
-
-        return $queryBuilder;
     }
 
     /**
@@ -37,7 +35,6 @@ class InventorySourcesDataGrid extends DataGrid
             'index'      => 'id',
             'label'      => trans('admin::app.settings.inventory-sources.index.datagrid.id'),
             'type'       => 'integer',
-            'searchable' => false,
             'filterable' => true,
             'sortable'   => true,
         ]);

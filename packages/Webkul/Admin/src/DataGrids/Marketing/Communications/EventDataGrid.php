@@ -14,9 +14,12 @@ class EventDataGrid extends DataGrid
      */
     public function prepareQueryBuilder()
     {
-        $queryBuilder = DB::table('marketing_events')->addSelect('id', 'name', 'date');
-
-        return $queryBuilder;
+        return DB::table('marketing_events')
+            ->select(
+                'id',
+                'name',
+                'date'
+            );
     }
 
     public function prepareColumns()
@@ -25,7 +28,6 @@ class EventDataGrid extends DataGrid
             'index'      => 'id',
             'label'      => trans('admin::app.marketing.communications.events.index.datagrid.id'),
             'type'       => 'integer',
-            'searchable' => false,
             'filterable' => true,
             'sortable'   => true,
         ]);
@@ -40,12 +42,13 @@ class EventDataGrid extends DataGrid
         ]);
 
         $this->addColumn([
-            'index'      => 'date',
-            'label'      => trans('admin::app.marketing.communications.events.index.datagrid.date'),
-            'type'       => 'datetime',
-            'searchable' => true,
-            'filterable' => true,
-            'sortable'   => true,
+            'index'           => 'date',
+            'label'           => trans('admin::app.marketing.communications.events.index.datagrid.date'),
+            'type'            => 'date',
+            'searchable'      => true,
+            'filterable'      => true,
+            'filterable_type' => 'date_range',
+            'sortable'        => true,
         ]);
     }
 
@@ -53,6 +56,7 @@ class EventDataGrid extends DataGrid
     {
         if (bouncer()->hasPermission('marketing.communications.events.edit')) {
             $this->addAction([
+                'index'  => 'edit',
                 'icon'   => 'icon-edit',
                 'title'  => trans('admin::app.marketing.communications.events.index.datagrid.edit'),
                 'method' => 'PUT',
@@ -64,6 +68,7 @@ class EventDataGrid extends DataGrid
 
         if (bouncer()->hasPermission('marketing.communications.events.delete')) {
             $this->addAction([
+                'index'  => 'delete',
                 'icon'   => 'icon-delete',
                 'title'  => trans('admin::app.marketing.communications.events.index.datagrid.delete'),
                 'method' => 'DELETE',

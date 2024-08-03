@@ -3,9 +3,9 @@
 namespace Webkul\Admin\Http\Controllers\Marketing\Communications;
 
 use Illuminate\Http\JsonResponse;
+use Webkul\Admin\DataGrids\Marketing\Communications\NewsLetterDataGrid;
 use Webkul\Admin\Http\Controllers\Controller;
 use Webkul\Core\Repositories\SubscribersListRepository;
-use Webkul\Admin\DataGrids\Marketing\Communications\NewsLetterDataGrid;
 
 class SubscriptionController extends Controller
 {
@@ -14,9 +14,7 @@ class SubscriptionController extends Controller
      *
      * @return void
      */
-    public function __construct(protected SubscribersListRepository $subscribersListRepository)
-    {
-    }
+    public function __construct(protected SubscribersListRepository $subscribersListRepository) {}
 
     /**
      * Display a listing of the resource.
@@ -26,7 +24,7 @@ class SubscriptionController extends Controller
     public function index()
     {
         if (request()->ajax()) {
-            return app(NewsLetterDataGrid::class)->toJson();
+            return datagrid(NewsLetterDataGrid::class)->process();
         }
 
         return view('admin::marketing.communications.subscribers.index');
@@ -34,16 +32,13 @@ class SubscriptionController extends Controller
 
     /**
      * Subscriber Details
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\JsonResponse
      */
-    public function edit($id): JsonResponse
+    public function edit(int $id): JsonResponse
     {
         $subscriber = $this->subscribersListRepository->findOrFail($id);
 
         return new JsonResponse([
-            'data'  =>  $subscriber,
+            'data'  => $subscriber,
         ]);
     }
 
@@ -54,39 +49,41 @@ class SubscriptionController extends Controller
      */
     public function update()
     {
-        $subscriber = $this->subscribersListRepository->findOrFail(request()->id);
+        $validatedData = $this->validate(request(), [
+            'id'            => 'required',
+            'is_subscribed' => 'required|in:0,1',
+        ]);
+
+        $subscriber = $this->subscribersListRepository->findOrFail($validatedData['id']);
 
         $customer = $subscriber->customer;
 
-        if (! is_null($customer)) {
-            $customer->subscribed_to_news_letter = request('is_subscribed');
+        if ($customer) {
+            $customer->subscribed_to_news_letter = $validatedData['is_subscribed'];
 
             $customer->save();
         }
 
-        $result = $subscriber->update(request()->only('is_subscribed'));
+        $result = $subscriber->update(['is_subscribed' => $validatedData['is_subscribed']]);
 
         if ($result) {
             return response()->json([
                 'message' => trans('admin::app.marketing.communications.subscribers.index.edit.success'),
             ], 200);
-        } else {
-            return response()->json([
-                'message' => trans('admin::app.marketing.communications.subscribers.index.edit.update-failed'),
-            ], 500);
         }
+
+        return response()->json([
+            'message' => trans('admin::app.marketing.communications.subscribers.index.edit.update-failed'),
+        ], 500);
     }
 
     /**
      * Remove the specified resource from storage.
      *
-     * @param int $id
      * @return void
      */
-    public function destroy($id)
+    public function destroy(int $id)
     {
-        $subscriber = $this->subscribersListRepository->findOrFail($id);
-
         try {
             $this->subscribersListRepository->delete($id);
 

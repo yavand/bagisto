@@ -14,9 +14,12 @@ class AttributeFamilyDataGrid extends DataGrid
      */
     public function prepareQueryBuilder()
     {
-        $queryBuilder = DB::table('attribute_families')->select('id')->addSelect('id', 'code', 'name');
-
-        return $queryBuilder;
+        return DB::table('attribute_families')
+            ->select(
+                'id',
+                'code',
+                'name',
+            );
     }
 
     /**
@@ -30,7 +33,6 @@ class AttributeFamilyDataGrid extends DataGrid
             'index'      => 'id',
             'label'      => trans('admin::app.catalog.families.index.datagrid.id'),
             'type'       => 'integer',
-            'searchable' => false,
             'filterable' => true,
             'sortable'   => true,
         ]);

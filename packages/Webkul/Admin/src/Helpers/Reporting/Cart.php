@@ -2,18 +2,16 @@
 
 namespace Webkul\Admin\Helpers\Reporting;
 
-use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Eloquent\Collection;
-use Webkul\Checkout\Repositories\CartRepository;
+use Illuminate\Support\Facades\DB;
 use Webkul\Checkout\Repositories\CartItemRepository;
+use Webkul\Checkout\Repositories\CartRepository;
 
 class Cart extends AbstractReporting
 {
     /**
      * Create a helper instance.
-     * 
-     * @param  \Webkul\Checkout\Repositories\CartRepository  $cartRepository
-     * @param  \Webkul\Checkout\Repositories\CartItemRepository  $cartItemRepository
+     *
      * @return void
      */
     public function __construct(
@@ -25,7 +23,7 @@ class Cart extends AbstractReporting
 
     /**
      * Retrieves total carts and their progress.
-     * 
+     *
      * @return array
      */
     public function getTotalCartsProgress()
@@ -39,8 +37,6 @@ class Cart extends AbstractReporting
 
     /**
      * Retrieves today carts and their progress.
-     * 
-     * @return array
      */
     public function getTodayCartsProgress(): array
     {
@@ -53,7 +49,7 @@ class Cart extends AbstractReporting
 
     /**
      * Retrieves total abandoned sales and their progress.
-     * 
+     *
      * @return array
      */
     public function getTotalAbandonedSalesProgress()
@@ -68,7 +64,7 @@ class Cart extends AbstractReporting
 
     /**
      * Retrieves total abandoned carts and their progress.
-     * 
+     *
      * @return array
      */
     public function getTotalAbandonedCartsProgress()
@@ -82,7 +78,7 @@ class Cart extends AbstractReporting
 
     /**
      * Retrieves total abandoned carts rate and their progress.
-     * 
+     *
      * @return array
      */
     public function getTotalAbandonedCartRateProgress()
@@ -96,39 +92,40 @@ class Cart extends AbstractReporting
 
     /**
      * Retrieves total carts
-     * 
+     *
      * @param  \Carbon\Carbon  $startDate
      * @param  \Carbon\Carbon  $endDate
-     * @return int
      */
     public function getTotalCarts($startDate, $endDate): int
     {
         return $this->cartRepository
+            ->resetModel()
+            ->whereIn('channel_id', $this->channelIds)
             ->whereBetween('created_at', [$startDate, $endDate])
             ->count();
     }
 
     /**
      * Retrieves total abandoned carts
-     * 
+     *
      * @param  \Carbon\Carbon  $startDate
      * @param  \Carbon\Carbon  $endDate
-     * @return int
      */
     public function getTotalAbandonedCarts($startDate, $endDate): int
     {
         return $this->cartRepository
+            ->resetModel()
             ->where('is_active', 1)
+            ->whereIn('channel_id', $this->channelIds)
             ->whereBetween('created_at', [$startDate, $endDate->subDays(2)])
             ->count();
     }
 
     /**
      * Retrieves total abandoned cart rate
-     * 
+     *
      * @param  \Carbon\Carbon  $startDate
      * @param  \Carbon\Carbon  $endDate
-     * @return float
      */
     public function getTotalAbandonedCartRate($startDate, $endDate): float
     {
@@ -143,32 +140,34 @@ class Cart extends AbstractReporting
 
     /**
      * Retrieves total abandoned sales
-     * 
+     *
      * @param  \Carbon\Carbon  $startDate
      * @param  \Carbon\Carbon  $endDate
-     * @return int
      */
     public function getTotalAbandonedSales($startDate, $endDate): int
     {
         return $this->cartRepository
+            ->resetModel()
             ->where('is_active', 1)
+            ->whereIn('channel_id', $this->channelIds)
             ->whereBetween('created_at', [$startDate, $endDate->subDays(2)])
             ->sum('base_grand_total');
     }
 
     /**
      * Retrieves abandoned cart products
-     * 
-     * @param  integer  $limit
-     * @return \Illuminate\Database\Eloquent\Collection
+     *
+     * @param  int  $limit
      */
     public function getAbandonedCartProducts($limit = null): Collection
     {
         return $this->cartItemRepository
+            ->resetModel()
+            ->leftJoin('cart', 'cart_items.cart_id', '=', 'cart.id')
             ->select('product_id as id', 'name')
             ->addSelect(DB::raw('COUNT(*) as count'))
-            ->leftJoin('cart', 'cart_items.cart_id', '=', 'cart.id')
             ->where('is_active', 1)
+            ->whereIn('cart.channel_id', $this->channelIds)
             ->whereBetween('cart.created_at', [$this->startDate, $this->endDate->subDays(2)])
             ->groupBy('product_id')
             ->limit($limit)
@@ -178,22 +177,22 @@ class Cart extends AbstractReporting
 
     /**
      * Retrieves total abandoned cart products
-     * 
-     * @return int
      */
     public function getTotalAbandonedCartProducts(): int
     {
         return $this->cartItemRepository
+            ->resetModel()
             ->distinct('product_id')
             ->leftJoin('cart', 'cart_items.cart_id', '=', 'cart.id')
             ->where('is_active', 1)
+            ->whereIn('cart.channel_id', $this->channelIds)
             ->whereBetween('cart.created_at', [$this->startDate, $this->endDate->subDays(2)])
             ->count();
     }
 
     /**
      * Retrieves total unique cart users
-     * 
+     *
      * @param  \Carbon\Carbon  $startDate
      * @param  \Carbon\Carbon  $endDate
      * @return array
@@ -201,7 +200,9 @@ class Cart extends AbstractReporting
     public function getTotalUniqueCartsUsers($startDate, $endDate): int
     {
         return $this->cartRepository
+            ->resetModel()
             ->groupBy(DB::raw('CONCAT(customer_email, "-", customer_id)'))
+            ->whereIn('cart.channel_id', $this->channelIds)
             ->whereBetween('created_at', [$startDate, $endDate])
             ->get()
             ->count();

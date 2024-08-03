@@ -2,10 +2,10 @@
 
 namespace Webkul\Theme;
 
-use Webkul\Theme\Facades\Themes;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use Illuminate\View\FileViewFinder;
+use Webkul\Theme\Facades\Themes;
 
 class ThemeViewFinder extends FileViewFinder
 {
@@ -18,17 +18,17 @@ class ThemeViewFinder extends FileViewFinder
     protected function findNamespacedView($name)
     {
         // Extract the $view and the $namespace parts
-        list($namespace, $view) = $this->parseNamespaceSegments($name);
+        [$namespace, $view] = $this->parseNamespaceSegments($name);
 
-        if (! Str::contains(request()->url(), config('app.admin_url') . '/')) {
+        if (! Str::contains(request()->url(), config('app.admin_url').'/')) {
             $paths = $this->addThemeNamespacePaths($namespace);
 
             try {
                 return $this->findInPaths($view, $paths);
-            } catch(\Exception $e) {
+            } catch (\Exception $e) {
                 if ($namespace !== 'shop') {
                     if (strpos($view, 'shop.') !== false) {
-                        $view = str_replace('shop.', 'shop.' . Themes::current()->code . '.', $view);
+                        $view = str_replace('shop.', 'shop.'.Themes::current()->code.'.', $view);
                     }
                 }
 
@@ -43,10 +43,10 @@ class ThemeViewFinder extends FileViewFinder
 
             try {
                 return $this->findInPaths($view, $paths);
-            } catch(\Exception $e) {
+            } catch (\Exception $e) {
                 if ($namespace != 'admin') {
                     if (strpos($view, 'admin.') !== false) {
-                        $view = str_replace('admin.', 'admin.' . Themes::current()->code . '.', $view);
+                        $view = str_replace('admin.', 'admin.'.Themes::current()->code.'.', $view);
                     }
                 }
 
@@ -70,7 +70,7 @@ class ThemeViewFinder extends FileViewFinder
         $searchPaths = array_diff($this->paths, Themes::getLaravelViewPaths());
 
         foreach (array_reverse($searchPaths) as $path) {
-            $newPath = base_path() . '/' . $path;
+            $newPath = base_path().'/'.$path;
 
             $paths = Arr::prepend($paths, $newPath);
         }
@@ -81,7 +81,7 @@ class ThemeViewFinder extends FileViewFinder
     /**
      * Override replaceNamespace() to add path for custom error pages "resources/themes/theme_name/views/errors/..."
      *
-     * @param  string        $namespace
+     * @param  string  $namespace
      * @param  string|array  $hints
      * @return void
      */
@@ -97,7 +97,7 @@ class ThemeViewFinder extends FileViewFinder
             $searchPaths = array_diff($this->paths, Themes::getLaravelViewPaths());
 
             $addPaths = array_map(function ($path) use ($namespace) {
-                return base_path() . '/' . "$path/$namespace";
+                return base_path().'/'."$path/$namespace";
             }, $searchPaths);
 
             $this->prependNamespace($namespace, $addPaths);

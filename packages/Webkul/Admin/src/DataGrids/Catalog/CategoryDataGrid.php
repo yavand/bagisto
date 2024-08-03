@@ -3,7 +3,6 @@
 namespace Webkul\Admin\DataGrids\Catalog;
 
 use Illuminate\Support\Facades\DB;
-use Webkul\Core\Models\Locale;
 use Webkul\DataGrid\DataGrid;
 
 class CategoryDataGrid extends DataGrid
@@ -16,44 +15,27 @@ class CategoryDataGrid extends DataGrid
     protected $primaryColumn = 'category_id';
 
     /**
-     * Contains the keys for which extra filters to show.
-     *
-     * @var string[]
-     */
-    protected $extraFilters = [
-        'locales',
-    ];
-
-    /**
      * Prepare query builder.
      *
      * @return \Illuminate\Database\Query\Builder
      */
     public function prepareQueryBuilder()
     {
-        if (core()->getRequestedLocaleCode() === 'all') {
-            $whereInLocales = Locale::query()->pluck('code')->toArray();
-        } else {
-            $whereInLocales = [core()->getRequestedLocaleCode()];
-        }
-
-        $queryBuilder = DB::table('categories as cat')
+        $queryBuilder = DB::table('categories')
             ->select(
-                'cat.id as category_id',
-                'ct.name',
-                'cat.position',
-                'cat.status',
-                'ct.locale',
-                DB::raw('COUNT(DISTINCT ' . DB::getTablePrefix() . 'pc.product_id) as count')
+                'categories.id as category_id',
+                'category_translations.name',
+                'categories.position',
+                'categories.status',
+                'category_translations.locale',
             )
-            ->leftJoin('category_translations as ct', function ($leftJoin) use ($whereInLocales) {
-                $leftJoin->on('cat.id', '=', 'ct.category_id')
-                    ->whereIn('ct.locale', $whereInLocales);
-            })
-            ->leftJoin('product_categories as pc', 'cat.id', '=', 'pc.category_id')
-            ->groupBy('cat.id', 'ct.locale');
+            ->addSelect(DB::raw('COUNT(DISTINCT '.DB::getTablePrefix().'product_categories.product_id) as count'))
+            ->leftJoin('category_translations', 'categories.id', '=', 'category_translations.category_id')
+            ->leftJoin('product_categories', 'categories.id', '=', 'product_categories.category_id')
+            ->where('category_translations.locale', app()->getLocale())
+            ->groupBy('categories.id');
 
-        $this->addFilter('category_id', 'cat.id');
+        $this->addFilter('category_id', 'categories.id');
 
         return $queryBuilder;
     }
@@ -69,7 +51,6 @@ class CategoryDataGrid extends DataGrid
             'index'      => 'category_id',
             'label'      => trans('admin::app.catalog.categories.index.datagrid.id'),
             'type'       => 'integer',
-            'searchable' => false,
             'filterable' => true,
             'sortable'   => true,
         ]);
@@ -87,7 +68,6 @@ class CategoryDataGrid extends DataGrid
             'index'      => 'position',
             'label'      => trans('admin::app.catalog.categories.index.datagrid.position'),
             'type'       => 'integer',
-            'searchable' => false,
             'filterable' => true,
             'sortable'   => true,
         ]);
@@ -96,15 +76,14 @@ class CategoryDataGrid extends DataGrid
             'index'      => 'status',
             'label'      => trans('admin::app.catalog.categories.index.datagrid.status'),
             'type'       => 'boolean',
-            'searchable' => false,
             'filterable' => true,
             'sortable'   => true,
             'closure'    => function ($value) {
                 if ($value->status) {
-                    return '<span class="badge badge-md badge-success">' . trans('admin::app.catalog.categories.index.datagrid.active') . '</span>';
+                    return '<span class="badge badge-md badge-success">'.trans('admin::app.catalog.categories.index.datagrid.active').'</span>';
                 }
 
-                return '<span class="badge badge-md badge-danger">' . trans('admin::app.catalog.categories.index.datagrid.inactive') . '</span>';
+                return '<span class="badge badge-md badge-danger">'.trans('admin::app.catalog.categories.index.datagrid.inactive').'</span>';
             },
         ]);
 
@@ -112,8 +91,6 @@ class CategoryDataGrid extends DataGrid
             'index'      => 'count',
             'label'      => trans('admin::app.catalog.categories.index.datagrid.no-of-products'),
             'type'       => 'integer',
-            'searchable' => false,
-            'filterable' => false,
             'sortable'   => true,
         ]);
     }
@@ -147,7 +124,7 @@ class CategoryDataGrid extends DataGrid
             ]);
         }
 
-        if (bouncer()->hasPermission('catalog.categories.mass-delete')) {
+        if (bouncer()->hasPermission('catalog.categories.delete')) {
             $this->addMassAction([
                 'title'  => trans('admin::app.catalog.categories.index.datagrid.delete'),
                 'method' => 'POST',
@@ -155,7 +132,7 @@ class CategoryDataGrid extends DataGrid
             ]);
         }
 
-        if (bouncer()->hasPermission('catalog.categories.mass-update')) {
+        if (bouncer()->hasPermission('catalog.categories.edit')) {
             $this->addMassAction([
                 'title'   => trans('admin::app.catalog.categories.index.datagrid.update-status'),
                 'method'  => 'POST',
@@ -164,8 +141,7 @@ class CategoryDataGrid extends DataGrid
                     [
                         'label' => trans('admin::app.catalog.categories.index.datagrid.active'),
                         'value' => 1,
-                    ],
-                    [
+                    ], [
                         'label' => trans('admin::app.catalog.categories.index.datagrid.inactive'),
                         'value' => 0,
                     ],

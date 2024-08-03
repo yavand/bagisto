@@ -2,12 +2,12 @@
 
 namespace Webkul\Admin\Http\Controllers\Reporting;
 
-use Webkul\Admin\Helpers\Reporting;
-
 class SaleController extends Controller
 {
     /**
-     * Request param functions
+     * Request param functions.
+     *
+     * @var array
      */
     protected $typeFunctions = [
         'total-sales'         => 'getTotalSalesStats',
@@ -20,16 +20,6 @@ class SaleController extends Controller
         'shipping-collected'  => 'getShippingCollectedStats',
         'top-payment-methods' => 'getTopPaymentMethods',
     ];
-
-    /**
-     * Create a controller instance.
-     * 
-     * @param  \Webkul\Admin\Helpers\Reporting  $reportingHelper
-     * @return void
-     */
-    public function __construct(protected Reporting $reportingHelper)
-    {
-    }
 
     /**
      * Display a listing of the resource.

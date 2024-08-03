@@ -4,12 +4,11 @@ namespace Webkul\Admin\Http\Controllers\Customers;
 
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Event;
-use Webkul\Core\Rules\AlphaNumericSpace;
-use Webkul\Core\Rules\PhoneNumber;
-use Webkul\Customer\Rules\VatIdRule;
 use Webkul\Admin\Http\Controllers\Controller;
-use Webkul\Customer\Repositories\CustomerRepository;
+use Webkul\Admin\Http\Requests\AddressRequest;
+use Webkul\Admin\Http\Resources\AddressResource;
 use Webkul\Customer\Repositories\CustomerAddressRepository;
+use Webkul\Customer\Repositories\CustomerRepository;
 
 class AddressController extends Controller
 {
@@ -21,17 +20,14 @@ class AddressController extends Controller
     public function __construct(
         protected CustomerRepository $customerRepository,
         protected CustomerAddressRepository $customerAddressRepository
-    )
-    {
-    }
+    ) {}
 
     /**
      * Fetch address by customer id.
      *
-     * @param  int  $id
      * @return \Illuminate\View\View
      */
-    public function index($id)
+    public function index(int $id)
     {
         $customer = $this->customerRepository->find($id);
 
@@ -41,10 +37,9 @@ class AddressController extends Controller
     /**
      * Show the form for creating a new resource.
      *
-     * @param  int  $id
      * @return \Illuminate\View\View
      */
-    public function create($id)
+    public function create(int $id)
     {
         $customer = $this->customerRepository->find($id);
 
@@ -53,58 +48,47 @@ class AddressController extends Controller
 
     /**
      * Store a newly created resource in storage.
-     *
-     * @return \Illuminate\Http\JsonResponse
      */
-    public function store(): JsonResponse
+    public function store(int $id, AddressRequest $request): JsonResponse
     {
-        $this->validate(request(), [
-            'company_name' => [new AlphaNumericSpace],
-            'address1'     => ['required', 'array'],
-            'country'      => ['required', new AlphaNumericSpace],
-            'state'        => ['required', new AlphaNumericSpace],
-            'city'         => ['required', 'string'],
-            'postcode'     => ['required', 'numeric'],
-            'phone'        => ['required', new PhoneNumber],
-            'vat_id'       => [new VatIdRule()],
-        ]);
-
-        $data = array_merge(request()->only([
+        $data = array_merge($request->only([
             'customer_id',
             'company_name',
             'vat_id',
             'first_name',
             'last_name',
-            'address1',
+            'address',
             'city',
             'country',
             'state',
             'postcode',
             'phone',
+            'email',
             'default_address',
         ]), [
-            'address1' => implode(PHP_EOL, array_filter(request()->input('address1'))),
-            'address2' => implode(PHP_EOL, array_filter(request()->input('address2', []))),
+            'address' => implode(PHP_EOL, array_filter(request()->input('address'))),
         ]);
 
         Event::dispatch('customer.addresses.create.before');
 
-        $customerAddress = $this->customerAddressRepository->create($data);
+        $address = $this->customerAddressRepository->create(array_merge($data, [
+            'customer_id' => $id,
+        ]));
 
-        Event::dispatch('customer.addresses.create.after', $customerAddress);
+        Event::dispatch('customer.addresses.create.after', $address);
 
         return new JsonResponse([
-            'message' => trans('admin::app.customers.addresses.create-success'),
+            'message' => trans('admin::app.customers.customers.view.address.create-success'),
+            'data'    => new AddressResource($address),
         ]);
     }
 
     /**
      * Display a listing of the resource.
      *
-     * @param  int  $id
      * @return \Illuminate\View\View
      */
-    public function edit($id)
+    public function edit(int $id)
     {
         $address = $this->customerAddressRepository->find($id);
 
@@ -113,49 +97,36 @@ class AddressController extends Controller
 
     /**
      * Edit's the pre made resource of customer called address.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\JsonResponse
      */
-    public function update($id): JsonResponse
+    public function update(int $id, AddressRequest $request): JsonResponse
     {
-        $this->validate(request(), [
-            'company_name' => [new AlphaNumericSpace],
-            'address1'     => ['required', 'array'],
-            'country'      => ['required', new AlphaNumericSpace],
-            'state'        => ['required', new AlphaNumericSpace],
-            'city'         => ['required', 'string'],
-            'postcode'     => ['required', 'numeric'],
-            'phone'        => ['required', new PhoneNumber],
-            'vat_id'       => [new VatIdRule()],
-        ]);
-
-        $data = array_merge(request()->only([
+        $data = array_merge($request->only([
             'customer_id',
             'company_name',
             'vat_id',
             'first_name',
             'last_name',
-            'address1',
+            'address',
             'city',
             'country',
             'state',
             'postcode',
             'phone',
+            'email',
             'default_address',
         ]), [
-            'address1' => implode(PHP_EOL, array_filter(request()->input('address1'))),
-            'address2' => implode(PHP_EOL, array_filter(request()->input('address2', []))),
+            'address' => implode(PHP_EOL, array_filter(request()->input('address'))),
         ]);
 
         Event::dispatch('customer.addresses.update.before', $id);
 
-        $customerAddress = $this->customerAddressRepository->update($data, $id);
+        $address = $this->customerAddressRepository->update($data, $id);
 
-        Event::dispatch('customer.addresses.update.after', $customerAddress);
+        Event::dispatch('customer.addresses.update.after', $address);
 
         return new JsonResponse([
-            'message' => trans('admin::app.customers.addresses.update-success'),
+            'message' => trans('admin::app.customers.customers.view.address.update-success'),
+            'data'    => new AddressResource($address),
         ]);
     }
 
@@ -173,25 +144,23 @@ class AddressController extends Controller
 
         $address = $this->customerAddressRepository->findOneWhere([
             'id'              => request('set_as_default'),
-            'customer_id'     => $id
+            'customer_id'     => $id,
         ]);
 
-        if ($address) {
-            $address->update(['default_address' => 1]);
+        $address->update(['default_address' => 1]);
 
-            session()->flash('success', trans('admin::app.customers.customers.view.set-default-success'));
-        }
-
-        return redirect()->back();
+        return new JsonResponse([
+            'message' => trans('admin::app.customers.customers.view.address.set-default-success'),
+            'data'    => $address,
+        ]);
     }
 
     /**
      * Remove the specified resource from storage.
      *
-     * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id)
+    public function destroy(int $id)
     {
         Event::dispatch('customer.addresses.delete.before', $id);
 
@@ -199,8 +168,8 @@ class AddressController extends Controller
 
         Event::dispatch('customer.addresses.delete.after', $id);
 
-        session()->flash('success', trans('admin::app.customers.customers.view.address-delete-success'));
-
-        return redirect()->back();
+        return new JsonResponse([
+            'message' => trans('admin::app.customers.customers.view.address.address-delete-success'),
+        ]);
     }
 }

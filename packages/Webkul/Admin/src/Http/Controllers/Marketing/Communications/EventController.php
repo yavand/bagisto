@@ -4,9 +4,9 @@ namespace Webkul\Admin\Http\Controllers\Marketing\Communications;
 
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Event;
+use Webkul\Admin\DataGrids\Marketing\Communications\EventDataGrid;
 use Webkul\Admin\Http\Controllers\Controller;
 use Webkul\Marketing\Repositories\EventRepository;
-use Webkul\Admin\DataGrids\Marketing\Communications\EventDataGrid;
 
 class EventController extends Controller
 {
@@ -15,9 +15,7 @@ class EventController extends Controller
      *
      * @return void
      */
-    public function __construct(protected EventRepository $eventRepository)
-    {
-    }
+    public function __construct(protected EventRepository $eventRepository) {}
 
     /**
      * Display a listing of the resource.
@@ -27,7 +25,7 @@ class EventController extends Controller
     public function index()
     {
         if (request()->ajax()) {
-            return app(EventDataGrid::class)->toJson();
+            return datagrid(EventDataGrid::class)->process();
         }
 
         return view('admin::marketing.communications.events.index');
@@ -51,7 +49,7 @@ class EventController extends Controller
         $event = $this->eventRepository->create(request()->only([
             'name',
             'description',
-            'date'
+            'date',
         ]));
 
         Event::dispatch('marketing.events.create.after', $event);
@@ -63,11 +61,8 @@ class EventController extends Controller
 
     /**
      * Event Details
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\JsonResponse
      */
-    public function edit($id): JsonResponse
+    public function edit(int $id): JsonResponse
     {
         if ($id == 1) {
             return new JsonResponse([
@@ -100,7 +95,7 @@ class EventController extends Controller
         $event = $this->eventRepository->update(request()->only([
             'name',
             'description',
-            'date'
+            'date',
         ]), $id);
 
         Event::dispatch('marketing.events.update.after', $event);
@@ -113,10 +108,9 @@ class EventController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param int $id
      * @return \Illuminate\Http\JsonResponse
      */
-    public function destroy($id)
+    public function destroy(int $id)
     {
         $this->eventRepository->findOrFail($id);
 

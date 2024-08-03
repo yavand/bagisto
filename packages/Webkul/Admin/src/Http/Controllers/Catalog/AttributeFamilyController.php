@@ -4,10 +4,10 @@ namespace Webkul\Admin\Http\Controllers\Catalog;
 
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Event;
-use Webkul\Admin\Http\Controllers\Controller;
-use Webkul\Attribute\Repositories\AttributeRepository;
-use Webkul\Attribute\Repositories\AttributeFamilyRepository;
 use Webkul\Admin\DataGrids\Catalog\AttributeFamilyDataGrid;
+use Webkul\Admin\Http\Controllers\Controller;
+use Webkul\Attribute\Repositories\AttributeFamilyRepository;
+use Webkul\Attribute\Repositories\AttributeRepository;
 use Webkul\Core\Rules\Code;
 
 class AttributeFamilyController extends Controller
@@ -20,9 +20,7 @@ class AttributeFamilyController extends Controller
     public function __construct(
         protected AttributeFamilyRepository $attributeFamilyRepository,
         protected AttributeRepository $attributeRepository
-    )
-    {
-    }
+    ) {}
 
     /**
      * Display a listing of the resource.
@@ -32,7 +30,7 @@ class AttributeFamilyController extends Controller
     public function index()
     {
         if (request()->ajax()) {
-            return app(AttributeFamilyDataGrid::class)->toJson();
+            return datagrid(AttributeFamilyDataGrid::class)->process();
         }
 
         return view('admin::catalog.families.index');
@@ -60,8 +58,11 @@ class AttributeFamilyController extends Controller
     public function store()
     {
         $this->validate(request(), [
-            'code' => ['required', 'unique:attribute_families,code', new Code],
-            'name' => 'required',
+            'code'                      => ['required', 'unique:attribute_families,code', new Code],
+            'name'                      => 'required',
+            'attribute_groups.*.code'   => 'required',
+            'attribute_groups.*.name'   => 'required',
+            'attribute_groups.*.column' => 'required|in:1,2',
         ]);
 
         Event::dispatch('catalog.attribute_family.create.before');
@@ -82,10 +83,9 @@ class AttributeFamilyController extends Controller
     /**
      * Show the form for editing the specified resource.
      *
-     * @param  int  $id
      * @return \Illuminate\View\View
      */
-    public function edit($id)
+    public function edit(int $id)
     {
         $attributeFamily = $this->attributeFamilyRepository->with(['attribute_groups.custom_attributes'])->findOrFail($id, ['*']);
 
@@ -97,14 +97,16 @@ class AttributeFamilyController extends Controller
     /**
      * Update the specified resource in storage.
      *
-     * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update($id)
+    public function update(int $id)
     {
         $this->validate(request(), [
-            'code' => ['required', 'unique:attribute_families,code,' . $id, new Code],
-            'name' => 'required',
+            'code'                      => ['required', 'unique:attribute_families,code,'.$id, new Code],
+            'name'                      => 'required',
+            'attribute_groups.*.code'   => 'required',
+            'attribute_groups.*.name'   => 'required',
+            'attribute_groups.*.column' => 'required|in:1,2',
         ]);
 
         Event::dispatch('catalog.attribute_family.update.before', $id);
@@ -124,11 +126,8 @@ class AttributeFamilyController extends Controller
 
     /**
      * Remove the specified resource from storage.
-     *
-     * @param int $id
-     * @return \Illuminate\Http\JsonResponse
      */
-    public function destroy($id): JsonResponse
+    public function destroy(int $id): JsonResponse
     {
         $attributeFamily = $this->attributeFamilyRepository->findOrFail($id);
 
@@ -158,7 +157,6 @@ class AttributeFamilyController extends Controller
             report($e);
         }
 
-        
         return new JsonResponse([
             'message' => trans('admin::app.catalog.families.delete-failed', ['name' => 'admin::app.catalog.families.family']),
         ], 500);

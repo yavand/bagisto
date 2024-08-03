@@ -2,39 +2,44 @@
 
 namespace Webkul\Admin\Mail\Order;
 
-use Illuminate\Bus\Queueable;
-use Illuminate\Mail\Mailable;
-use Illuminate\Queue\SerializesModels;
-use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Mail\Mailables\Address;
+use Illuminate\Mail\Mailables\Content;
+use Illuminate\Mail\Mailables\Envelope;
+use Webkul\Admin\Mail\Mailable;
+use Webkul\Sales\Contracts\Shipment;
 
 class InventorySourceNotification extends Mailable
 {
-    use Queueable, SerializesModels;
-
     /**
      * Create a new message instance.
-     *
-     * @param  \Webkul\Sales\Contracts\Shipment  $shipment
-     * @return void
      */
-    public function __construct(public $shipment)
+    public function __construct(public Shipment $shipment) {}
+
+    /**
+     * Get the message envelope.
+     */
+    public function envelope(): Envelope
     {
+        $inventory = $this->shipment->inventory_source;
+
+        return new Envelope(
+            to: [
+                new Address(
+                    $inventory->contact_email,
+                    $inventory->contact_name
+                ),
+            ],
+            subject: trans('admin::app.emails.orders.inventory-source.subject'),
+        );
     }
 
     /**
-     * Build the message.
-     *
-     * @return $this
+     * Get the message content definition.
      */
-    public function build()
+    public function content(): Content
     {
-        $order = $this->shipment->order;
-        
-        $inventory = $this->shipment->inventory_source;
-
-        return $this->from(core()->getSenderEmailDetails()['email'], core()->getSenderEmailDetails()['name'])
-            ->to($inventory->contact_email, $inventory->contact_name)
-            ->subject(trans('admin::app.emails.orders.inventory-source.subject'))
-            ->view('admin::emails.orders.inventory-source');
+        return new Content(
+            view: 'admin::emails.orders.inventory-source',
+        );
     }
 }

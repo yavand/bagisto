@@ -2,11 +2,11 @@
 
 namespace Webkul\Admin\Http\Controllers\Sales;
 
+use Webkul\Admin\DataGrids\Sales\OrderShipmentDataGrid;
 use Webkul\Admin\Http\Controllers\Controller;
-use Webkul\Sales\Repositories\OrderRepository;
 use Webkul\Sales\Repositories\OrderItemRepository;
+use Webkul\Sales\Repositories\OrderRepository;
 use Webkul\Sales\Repositories\ShipmentRepository;
-use Webkul\Admin\DataGrids\Sales\OrderShipmentsDataGrid;
 
 class ShipmentController extends Controller
 {
@@ -19,9 +19,7 @@ class ShipmentController extends Controller
         protected OrderRepository $orderRepository,
         protected OrderItemRepository $orderItemRepository,
         protected ShipmentRepository $shipmentRepository
-    )
-    {
-    }
+    ) {}
 
     /**
      * Display a listing of the resource.
@@ -31,7 +29,7 @@ class ShipmentController extends Controller
     public function index()
     {
         if (request()->ajax()) {
-            return app(OrderShipmentsDataGrid::class)->toJson();
+            return datagrid(OrderShipmentDataGrid::class)->process();
         }
 
         return view('admin::sales.shipments.index');
@@ -40,14 +38,13 @@ class ShipmentController extends Controller
     /**
      * Show the form for creating a new resource.
      *
-     * @param  int  $orderId
      * @return \Illuminate\View\View
      */
-    public function create($orderId)
+    public function create(int $orderId)
     {
         $order = $this->orderRepository->findOrFail($orderId);
 
-        if (!$order->channel || !$order->canShip()) {
+        if (! $order->channel || ! $order->canShip()) {
             session()->flash('error', trans('admin::app.sales.shipments.create.creation-error'));
 
             return redirect()->back();
@@ -59,14 +56,13 @@ class ShipmentController extends Controller
     /**
      * Store a newly created resource in storage.
      *
-     * @param  int  $orderId
      * @return \Illuminate\Http\Response
      */
-    public function store($orderId)
+    public function store(int $orderId)
     {
         $order = $this->orderRepository->findOrFail($orderId);
 
-        if (!$order->canShip()) {
+        if (! $order->canShip()) {
             session()->flash('error', trans('admin::app.sales.shipments.create.order-error'));
 
             return redirect()->back();
@@ -79,7 +75,7 @@ class ShipmentController extends Controller
 
         $data = request()->only(['shipment', 'carrier_name']);
 
-        if (!$this->isInventoryValidate($data)) {
+        if (! $this->isInventoryValidate($data)) {
             session()->flash('error', trans('admin::app.sales.shipments.create.quantity-invalid'));
 
             return redirect()->back();
@@ -102,7 +98,7 @@ class ShipmentController extends Controller
      */
     public function isInventoryValidate(&$data)
     {
-        if (!isset($data['shipment']['items'])) {
+        if (! isset($data['shipment']['items'])) {
             return;
         }
 
@@ -122,7 +118,7 @@ class ShipmentController extends Controller
 
                 if ($orderItem->getTypeInstance()->isComposite()) {
                     foreach ($orderItem->children as $child) {
-                        if (!$child->qty_ordered) {
+                        if (! $child->qty_ordered) {
                             continue;
                         }
 
@@ -164,10 +160,9 @@ class ShipmentController extends Controller
     /**
      * Show the view for the specified resource.
      *
-     * @param  int  $id
      * @return \Illuminate\View\View
      */
-    public function view($id)
+    public function view(int $id)
     {
         $shipment = $this->shipmentRepository->findOrFail($id);
 

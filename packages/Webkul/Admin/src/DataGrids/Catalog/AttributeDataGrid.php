@@ -14,10 +14,18 @@ class AttributeDataGrid extends DataGrid
      */
     public function prepareQueryBuilder()
     {
-        $queryBuilder = DB::table('attributes')
-            ->select('id', 'code', 'admin_name', 'type', 'is_required', 'is_unique', 'value_per_locale', 'value_per_channel', 'created_at');
-
-        return $queryBuilder;
+        return DB::table('attributes')
+            ->select(
+                'id',
+                'code',
+                'admin_name',
+                'type',
+                'is_required',
+                'is_unique',
+                'value_per_locale',
+                'value_per_channel',
+                'created_at'
+            );
     }
 
     /**
@@ -55,12 +63,59 @@ class AttributeDataGrid extends DataGrid
         ]);
 
         $this->addColumn([
-            'index'      => 'type',
-            'label'      => trans('admin::app.catalog.attributes.index.datagrid.type'),
-            'type'       => 'string',
-            'searchable' => true,
-            'filterable' => true,
-            'sortable'   => true,
+            'index'              => 'type',
+            'label'              => trans('admin::app.catalog.attributes.index.datagrid.type'),
+            'type'               => 'string',
+            'searchable'         => true,
+            'filterable'         => true,
+            'filterable_type'    => 'dropdown',
+            'filterable_options' => [
+                [
+                    'label' => trans('admin::app.catalog.attributes.index.datagrid.text'),
+                    'value' => 'text',
+                ],
+                [
+                    'label' => trans('admin::app.catalog.attributes.index.datagrid.textarea'),
+                    'value' => 'textarea',
+                ],
+                [
+                    'label' => trans('admin::app.catalog.attributes.index.datagrid.price'),
+                    'value' => 'price',
+                ],
+                [
+                    'label' => trans('admin::app.catalog.attributes.index.datagrid.boolean'),
+                    'value' => 'boolean',
+                ],
+                [
+                    'label' => trans('admin::app.catalog.attributes.index.datagrid.select'),
+                    'value' => 'select',
+                ],
+                [
+                    'label' => trans('admin::app.catalog.attributes.index.datagrid.multiselect'),
+                    'value' => 'multiselect',
+                ],
+                [
+                    'label' => trans('admin::app.catalog.attributes.index.datagrid.date-time'),
+                    'value' => 'datetime',
+                ],
+                [
+                    'label' => trans('admin::app.catalog.attributes.index.datagrid.date'),
+                    'value' => 'date',
+                ],
+                [
+                    'label' => trans('admin::app.catalog.attributes.index.datagrid.image'),
+                    'value' => 'image',
+                ],
+                [
+                    'label' => trans('admin::app.catalog.attributes.index.datagrid.file'),
+                    'value' => 'file',
+                ],
+                [
+                    'label' => trans('admin::app.catalog.attributes.index.datagrid.checkbox'),
+                    'value' => 'checkbox',
+                ],
+            ],
+            'sortable' => true,
         ]);
 
         $this->addColumn([
@@ -70,6 +125,9 @@ class AttributeDataGrid extends DataGrid
             'searchable' => true,
             'filterable' => true,
             'sortable'   => true,
+            'closure'    => function ($value) {
+                return trans('admin::app.catalog.attributes.index.datagrid.'.($value->is_required ? 'true' : 'false'));
+            },
         ]);
 
         $this->addColumn([
@@ -79,6 +137,9 @@ class AttributeDataGrid extends DataGrid
             'searchable' => true,
             'filterable' => true,
             'sortable'   => true,
+            'closure'    => function ($value) {
+                return trans('admin::app.catalog.attributes.index.datagrid.'.($value->is_unique ? 'true' : 'false'));
+            },
         ]);
 
         $this->addColumn([
@@ -88,6 +149,9 @@ class AttributeDataGrid extends DataGrid
             'searchable' => true,
             'filterable' => true,
             'sortable'   => true,
+            'closure'    => function ($value) {
+                return trans('admin::app.catalog.attributes.index.datagrid.'.($value->value_per_locale ? 'true' : 'false'));
+            },
         ]);
 
         $this->addColumn([
@@ -97,15 +161,19 @@ class AttributeDataGrid extends DataGrid
             'searchable' => true,
             'filterable' => true,
             'sortable'   => true,
+            'closure'    => function ($value) {
+                return trans('admin::app.catalog.attributes.index.datagrid.'.($value->value_per_channel ? 'true' : 'false'));
+            },
         ]);
 
         $this->addColumn([
-            'index'      => 'created_at',
-            'label'      => trans('admin::app.catalog.attributes.index.datagrid.created-at'),
-            'type'       => 'date_range',
-            'searchable' => true,
-            'filterable' => true,
-            'sortable'   => true,
+            'index'           => 'created_at',
+            'label'           => trans('admin::app.catalog.attributes.index.datagrid.created-at'),
+            'type'            => 'date',
+            'searchable'      => true,
+            'filterable'      => true,
+            'filterable_type' => 'date_range',
+            'sortable'        => true,
         ]);
     }
 
@@ -146,7 +214,7 @@ class AttributeDataGrid extends DataGrid
      */
     public function prepareMassActions()
     {
-        if (bouncer()->hasPermission('catalog.attributes.mass-delete')) {
+        if (bouncer()->hasPermission('catalog.attributes.delete')) {
             $this->addMassAction([
                 'icon'   => 'icon-delete',
                 'title'  => trans('admin::app.catalog.attributes.index.datagrid.delete'),

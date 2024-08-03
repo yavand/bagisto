@@ -2,55 +2,71 @@
 
 namespace Webkul\Admin\Helpers\Reporting;
 
-use Illuminate\Support\Arr;
-use Illuminate\Support\Str;
-use Illuminate\Support\Carbon;
 use Carbon\CarbonPeriod;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Str;
 
 abstract class AbstractReporting
 {
     /**
+     * The channel ids.
+     */
+    protected array $channelIds;
+
+    /**
      * The starting date for a given period.
-     * 
-     * @var \Carbon\Carbon
      */
     protected Carbon $startDate;
 
     /**
      * The ending date for a given period.
-     * 
-     * @var \Carbon\Carbon
      */
     protected Carbon $endDate;
 
     /**
      * The starting date for the previous period.
-     * 
-     * @var \Carbon\Carbon
      */
     protected Carbon $lastStartDate;
 
     /**
      * The ending date for the previous period.
-     * 
-     * @var \Carbon\Carbon
      */
     protected Carbon $lastEndDate;
+
     /**
      * Create a helper instance.
-     * 
+     *
      * @return void
      */
     public function __construct()
     {
+        $this->setChannel(request()->query('channel'));
+
         $this->setStartDate(request()->date('start'));
 
         $this->setEndDate(request()->date('end'));
     }
 
     /**
+     * Sets the channel IDs and codes.
+     */
+    public function setChannel(?string $code = null): self
+    {
+        $this->channelIds = core()->getAllChannels()
+            ->filter(function ($channel) use ($code) {
+                return $code ? $channel->code == $code : true;
+            })
+            ->pluck('id')
+            ->toArray();
+
+        // $this->channelIds = [2];
+
+        return $this;
+    }
+
+    /**
      * Set the start date or default to 30 days ago if not provided.
-     * 
+     *
      * @param  \Carbon\Carbon|null  $startDate
      * @return void
      */
@@ -64,9 +80,9 @@ abstract class AbstractReporting
     }
 
     /**
-     * Sets the end date to the provided date's end of day, or to the current 
+     * Sets the end date to the provided date's end of day, or to the current
      * date if not provided or if the provided date is in the future.
-     * 
+     *
      * @param  \Carbon\Carbon|null  $endDate
      * @return void
      */
@@ -81,7 +97,7 @@ abstract class AbstractReporting
 
     /**
      * Get the start date.
-     * 
+     *
      * @return \Carbon\Carbon
      */
     public function getStartDate(): Carbon
@@ -91,7 +107,7 @@ abstract class AbstractReporting
 
     /**
      * Get the end date.
-     * 
+     *
      * @return \Carbon\Carbon
      */
     public function getEndDate(): Carbon
@@ -101,8 +117,6 @@ abstract class AbstractReporting
 
     /**
      * Sets the start date for the last period.
-     * 
-     * @return void
      */
     private function setLastStartDate(): void
     {
@@ -119,8 +133,6 @@ abstract class AbstractReporting
 
     /**
      * Sets the end date for the last period.
-     * 
-     * @return void
      */
     private function setLastEndDate(): void
     {
@@ -129,7 +141,7 @@ abstract class AbstractReporting
 
     /**
      * Get the last start date.
-     * 
+     *
      * @return \Carbon\Carbon
      */
     public function getLastStartDate(): Carbon
@@ -139,7 +151,7 @@ abstract class AbstractReporting
 
     /**
      * Get the last end date.
-     * 
+     *
      * @return \Carbon\Carbon
      */
     public function getLastEndDate(): Carbon
@@ -152,7 +164,6 @@ abstract class AbstractReporting
      *
      * @param  float|int  $previous
      * @param  float|int  $current
-     * @return float|int
      */
     public function getPercentageChange($previous, $current): float|int
     {
@@ -218,10 +229,10 @@ abstract class AbstractReporting
                 $formatter = '?-?-?';
             }
 
-            $groupColumn = 'DATE_FORMAT(created_at, "' . Str::replaceArray('?', ['%Y', '%m', '%d'], $formatter) . '")';
+            $groupColumn = 'DATE_FORMAT(created_at, "'.Str::replaceArray('?', ['%Y', '%m', '%d'], $formatter).'")';
 
             $intervals = [];
-            
+
             foreach ($datePeriod as $date) {
                 $formattedDate = $date->format(Str::replaceArray('?', ['Y', 'm', 'd'], $formatter));
 
@@ -290,9 +301,9 @@ abstract class AbstractReporting
     {
         $intervals = [];
 
-        $startWeekDay = Carbon::createFromTimeString(core()->xWeekRange($startDate, 0) . ' 00:00:01');
+        $startWeekDay = Carbon::createFromTimeString(core()->xWeekRange($startDate, 0).' 00:00:01');
 
-        $endWeekDay = Carbon::createFromTimeString(core()->xWeekRange($endDate, 1) . ' 23:59:59');
+        $endWeekDay = Carbon::createFromTimeString(core()->xWeekRange($endDate, 1).' 23:59:59');
 
         $totalWeeks = $startWeekDay->diffInWeeks($endWeekDay);
 
@@ -310,11 +321,11 @@ abstract class AbstractReporting
 
             $start = $i == 0
                 ? $startDate
-                : Carbon::createFromTimeString(core()->xWeekRange($intervalStartDate, 0) . ' 00:00:01');
+                : Carbon::createFromTimeString(core()->xWeekRange($intervalStartDate, 0).' 00:00:01');
 
             $end = ($totalWeeks - 1 == $i)
                 ? $endDate
-                : Carbon::createFromTimeString(core()->xWeekRange($intervalStartDate->subDay(), 1) . ' 23:59:59');
+                : Carbon::createFromTimeString(core()->xWeekRange($intervalStartDate->subDay(), 1).' 23:59:59');
 
             $intervals[] = [
                 'filter' => $start->week,
@@ -336,7 +347,7 @@ abstract class AbstractReporting
     public function getDaysInterval($startDate, $endDate)
     {
         $intervals = [];
-        
+
         $totalDays = $startDate->diffInDays($endDate) + 1;
 
         for ($i = 0; $i < $totalDays; $i++) {

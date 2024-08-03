@@ -1,29 +1,45 @@
 <?php
 
-
 namespace Webkul\Admin\Mail\Order;
 
-use Illuminate\Bus\Queueable;
-use Illuminate\Mail\Mailable;
-use Illuminate\Queue\SerializesModels;
+use Illuminate\Mail\Mailables\Address;
+use Illuminate\Mail\Mailables\Content;
+use Illuminate\Mail\Mailables\Envelope;
+use Webkul\Admin\Mail\Mailable;
+use Webkul\Sales\Contracts\Order;
 
 class CanceledNotification extends Mailable
 {
-    use Queueable, SerializesModels;
-
     /**
-     * @param  \Webkul\Sales\Contracts\Order  $order
+     * Create a new message instance.
+     *
      * @return void
      */
-    public function __construct(public $order)
+    public function __construct(public Order $order) {}
+
+    /**
+     * Get the message envelope.
+     */
+    public function envelope(): Envelope
     {
+        return new Envelope(
+            to: [
+                new Address(
+                    core()->getAdminEmailDetails()['email'],
+                    core()->getAdminEmailDetails()['name']
+                ),
+            ],
+            subject: trans('admin::app.emails.orders.canceled.subject'),
+        );
     }
 
-    public function build()
+    /**
+     * Get the message content definition.
+     */
+    public function content(): Content
     {
-        return $this->from(core()->getSenderEmailDetails()['email'], core()->getSenderEmailDetails()['name'])
-            ->to($this->order->customer_email, $this->order->customer_full_name)
-            ->subject(trans('admin::app.emails.orders.canceled.subject'))
-            ->view('admin::emails.orders.canceled');
+        return new Content(
+            view: 'admin::emails.orders.canceled',
+        );
     }
 }

@@ -2,7 +2,6 @@
 
 namespace Webkul\Admin\Http\Controllers;
 
-use Webkul\Admin\Http\Controllers\Controller;
 use Webkul\Notification\Repositories\NotificationRepository;
 
 class NotificationController extends Controller
@@ -12,9 +11,7 @@ class NotificationController extends Controller
      *
      * @return void
      */
-    public function __construct(protected NotificationRepository $notificationRepository)
-    {
-    }
+    public function __construct(protected NotificationRepository $notificationRepository) {}
 
     /**
      * Display a listing of the resource.
@@ -49,7 +46,6 @@ class NotificationController extends Controller
             'total_unread'   => $this->notificationRepository->where('read', 0)->count(),
         ];
     }
-
 
     /**
      * Update the notification is reade or not.

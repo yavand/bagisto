@@ -2,13 +2,13 @@
 
 namespace Webkul\Admin\Http\Controllers\Settings\Tax;
 
-use Illuminate\Support\Facades\Event;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Event;
+use Webkul\Admin\DataGrids\Settings\TaxCategoryDataGrid;
 use Webkul\Admin\Http\Controllers\Controller;
+use Webkul\Admin\Http\Resources\TaxCategoryResource;
 use Webkul\Tax\Repositories\TaxCategoryRepository;
 use Webkul\Tax\Repositories\TaxRateRepository;
-use Webkul\Admin\DataGrids\Settings\TaxCategoryDataGrid;
-use Webkul\Admin\Http\Resources\TaxCategoryResource;
 
 class TaxCategoryController extends Controller
 {
@@ -20,8 +20,7 @@ class TaxCategoryController extends Controller
     public function __construct(
         protected TaxCategoryRepository $taxCategoryRepository,
         protected TaxRateRepository $taxRateRepository
-    ) {
-    }
+    ) {}
 
     /**
      * Display a listing of the resource.
@@ -31,7 +30,7 @@ class TaxCategoryController extends Controller
     public function index()
     {
         if (request()->ajax()) {
-            return app(TaxCategoryDataGrid::class)->toJson();
+            return datagrid(TaxCategoryDataGrid::class)->process();
         }
 
         return view('admin::settings.taxes.categories.index')->with('taxRates', $this->taxRateRepository->all());
@@ -57,7 +56,7 @@ class TaxCategoryController extends Controller
             'code',
             'name',
             'description',
-            'taxrates'
+            'taxrates',
         ]);
 
         $taxCategory = $this->taxCategoryRepository->create($data);
@@ -73,10 +72,8 @@ class TaxCategoryController extends Controller
 
     /**
      * Tax Category Details
-     *
-     * @param int $id
      */
-    public function edit($id): TaxCategoryResource
+    public function edit(int $id): TaxCategoryResource
     {
         $taxCategory = $this->taxCategoryRepository->findOrFail($id);
 
@@ -85,15 +82,13 @@ class TaxCategoryController extends Controller
 
     /**
      * To update the tax category.
-     *
-     * @return \Illuminate\Http\JsonResponse
      */
     public function update(): JsonResponse
     {
         $id = request()->id;
 
         $this->validate(request(), [
-            'code'        => 'required|string|unique:tax_categories,code,' . $id,
+            'code'        => 'required|string|unique:tax_categories,code,'.$id,
             'name'        => 'required|string',
             'description' => 'required|string',
             'taxrates'    => 'array|required',
@@ -105,7 +100,7 @@ class TaxCategoryController extends Controller
             'code',
             'name',
             'description',
-            'taxrates'
+            'taxrates',
         ]);
 
         $taxCategory = $this->taxCategoryRepository->update($data, $id);
@@ -121,14 +116,9 @@ class TaxCategoryController extends Controller
 
     /**
      * Remove the specified resource from storage.
-     *
-     * @param int $id
-     * @return \Illuminate\Http\JsonResponse
      */
-    public function destroy($id): JsonResponse
+    public function destroy(int $id): JsonResponse
     {
-        $this->taxCategoryRepository->findOrFail($id);
-
         try {
             Event::dispatch('tax.category.delete.before', $id);
 

@@ -6,6 +6,7 @@ use Webkul\Checkout\Facades\Cart;
 use Webkul\Paypal\Payment\SmartButton;
 use Webkul\Sales\Repositories\InvoiceRepository;
 use Webkul\Sales\Repositories\OrderRepository;
+use Webkul\Sales\Transformers\OrderResource;
 
 class SmartButtonController extends Controller
 {
@@ -18,8 +19,7 @@ class SmartButtonController extends Controller
         protected SmartButton $smartButton,
         protected OrderRepository $orderRepository,
         protected InvoiceRepository $invoiceRepository
-    ) {
-    }
+    ) {}
 
     /**
      * Paypal order creation for approval of client.
@@ -60,7 +60,7 @@ class SmartButtonController extends Controller
     {
         $cart = Cart::getCart();
 
-        $billingAddressLines = $this->getAddressLines($cart->billing_address->address1);
+        $billingAddressLines = $this->getAddressLines($cart->billing_address->address);
 
         $data = [
             'intent' => 'CAPTURE',
@@ -217,7 +217,11 @@ class SmartButtonController extends Controller
 
             $this->validateOrder();
 
-            $order = $this->orderRepository->create(Cart::prepareDataForOrder());
+            $cart = Cart::getCart();
+
+            $data = (new OrderResource($cart))->jsonSerialize();
+
+            $order = $this->orderRepository->create($data);
 
             $this->orderRepository->update(['status' => 'processing'], $order->id);
 
@@ -227,7 +231,7 @@ class SmartButtonController extends Controller
 
             Cart::deActivateCart();
 
-            session()->flash('order', $order);
+            session()->flash('order_id', $order->id);
 
             return response()->json([
                 'success' => true,
@@ -267,7 +271,7 @@ class SmartButtonController extends Controller
 
         $minimumOrderAmount = (float) core()->getConfigData('sales.order_settings.minimum_order.minimum_order_amount') ?: 0;
 
-        if (! $cart->checkMinimumOrder()) {
+        if (! Cart::haveMinimumOrderAmount()) {
             throw new \Exception(trans('shop::app.checkout.cart.minimum-order-message', ['amount' => core()->currency($minimumOrderAmount)]));
         }
 

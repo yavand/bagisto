@@ -2,11 +2,13 @@
 
 namespace Webkul\Admin\Helpers\Reporting;
 
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Database\Eloquent\Collection;
-use Webkul\Product\Repositories\ProductRepository;
-use Webkul\Product\Repositories\ProductInventoryRepository;
 use Webkul\Customer\Repositories\WishlistRepository;
+use Webkul\Marketing\Repositories\SearchTermRepository;
+use Webkul\Product\Repositories\ProductInventoryRepository;
+use Webkul\Product\Repositories\ProductRepository;
 use Webkul\Product\Repositories\ProductReviewRepository;
 use Webkul\Sales\Repositories\OrderItemRepository;
 
@@ -14,12 +16,7 @@ class Product extends AbstractReporting
 {
     /**
      * Create a helper instance.
-     * 
-     * @param  \Webkul\Product\Repositories\ProductRepository  $productRepository
-     * @param  \Webkul\Product\Repositories\ProductInventoryRepository  $productInventoryRepository
-     * @param  \Webkul\Customer\Repositories\WishlistRepository  $wishlistRepository
-     * @param  \Webkul\Product\Repositories\ProductReviewRepository  $reviewRepository
-     * @param  \Webkul\Sales\Repositories\OrderItemRepository  $orderItemRepository
+     *
      * @return void
      */
     public function __construct(
@@ -28,14 +25,14 @@ class Product extends AbstractReporting
         protected WishlistRepository $wishlistRepository,
         protected ProductReviewRepository $reviewRepository,
         protected OrderItemRepository $orderItemRepository,
-    )
-    {
+        protected SearchTermRepository $searchTermRepository
+    ) {
         parent::__construct();
     }
 
     /**
      * Retrieves total sold quantities and their progress.
-     * 
+     *
      * @return array
      */
     public function getTotalSoldQuantitiesProgress()
@@ -49,10 +46,9 @@ class Product extends AbstractReporting
 
     /**
      * Returns previous sold quantities over time
-     * 
+     *
      * @param  string  $period
      * @param  bool  $includeEmpty
-     * @return array
      */
     public function getPreviousTotalSoldQuantitiesOverTime($period = 'auto', $includeEmpty = true): array
     {
@@ -61,10 +57,9 @@ class Product extends AbstractReporting
 
     /**
      * Returns current sold quantities over time
-     * 
+     *
      * @param  string  $period
      * @param  bool  $includeEmpty
-     * @return array
      */
     public function getCurrentTotalSoldQuantitiesOverTime($period = 'auto', $includeEmpty = true): array
     {
@@ -73,21 +68,23 @@ class Product extends AbstractReporting
 
     /**
      * Retrieves total sold quantities.
-     * 
+     *
      * @param  \Carbon\Carbon  $startDate
      * @param  \Carbon\Carbon  $endDate
-     * @return int
      */
     public function getTotalSoldQuantities($startDate, $endDate): int
     {
         return $this->orderItemRepository
-            ->whereBetween('created_at', [$startDate, $endDate])
-            ->sum('qty_ordered');
+            ->resetModel()
+            ->leftJoin('orders', 'order_items.order_id', '=', 'orders.id')
+            ->whereIn('orders.channel_id', $this->channelIds)
+            ->whereBetween('order_items.created_at', [$startDate, $endDate])
+            ->value(DB::raw('SUM(qty_invoiced - qty_refunded)')) ?? 0;
     }
 
     /**
      * Retrieves total products added to wishlist and their progress.
-     * 
+     *
      * @return array
      */
     public function getTotalProductsAddedToWishlistProgress()
@@ -101,10 +98,9 @@ class Product extends AbstractReporting
 
     /**
      * Returns previous products added to wishlist over time
-     * 
+     *
      * @param  string  $period
      * @param  bool  $includeEmpty
-     * @return array
      */
     public function getPreviousTotalProductsAddedToWishlistOverTime($period = 'auto', $includeEmpty = true): array
     {
@@ -113,10 +109,9 @@ class Product extends AbstractReporting
 
     /**
      * Returns current products added to wishlist over time
-     * 
+     *
      * @param  string  $period
      * @param  bool  $includeEmpty
-     * @return array
      */
     public function getCurrentTotalProductsAddedToWishlistOverTime($period = 'auto', $includeEmpty = true): array
     {
@@ -125,59 +120,62 @@ class Product extends AbstractReporting
 
     /**
      * Retrieves total products added to wishlist.
-     * 
+     *
      * @param  \Carbon\Carbon  $startDate
      * @param  \Carbon\Carbon  $endDate
-     * @return int
      */
     public function getTotalProductsAddedToWishlist($startDate, $endDate): int
     {
         return $this->wishlistRepository
+            ->resetModel()
+            ->whereIn('channel_id', $this->channelIds)
             ->whereBetween('created_at', [$startDate, $endDate])
             ->count();
     }
 
     /**
      * Retrieves total reviews and their progress.
-     * 
-     * @return array
      */
     public function getTotalReviewsProgress(): array
     {
         return [
             'previous' => $previous = $this->getTotalReviews($this->lastStartDate, $this->lastEndDate),
             'current'  => $current = $this->getTotalReviews($this->startDate, $this->endDate),
-            'progress' => $this->getPercentageChange($previous, $current)
+            'progress' => $this->getPercentageChange($previous, $current),
         ];
     }
 
     /**
      * Retrieves total reviews by date
-     * 
+     *
      * @param  \Carbon\Carbon  $startDate
      * @param  \Carbon\Carbon  $endDate
-     * @return integer
      */
     public function getTotalReviews($startDate, $endDate): int
     {
         return $this->reviewRepository
+            ->resetModel()
+            ->leftJoin('product_channels', 'product_reviews.product_id', '=', 'product_channels.product_id')
             ->where('status', 'approved')
+            ->whereIn('channel_id', $this->channelIds)
             ->whereBetween('created_at', [$startDate, $endDate])
             ->count();
     }
 
     /**
      * Gets stock threshold.
-     * 
-     * @param  integer  $limit
-     * @return \Illuminate\Database\Eloquent\Collection
+     *
+     * @param  int  $limit
      */
-    public function getStockThresholdProducts($limit = null): Collection
+    public function getStockThresholdProducts($limit = null): EloquentCollection
     {
         return $this->productInventoryRepository
-            ->with('product', 'product.attribute_family', 'product.attribute_values', 'product.images')
+            ->resetModel()
+            ->with(['product', 'product.attribute_family', 'product.attribute_values', 'product.images'])
+            ->leftJoin('product_channels', 'product_inventories.product_id', '=', 'product_channels.product_id')
             ->select('*', DB::raw('SUM(qty) as total_qty'))
-            ->groupBy('product_id')
+            ->whereIn('channel_id', $this->channelIds)
+            ->groupBy('product_inventories.product_id')
             ->orderBy('total_qty', 'ASC')
             ->limit($limit)
             ->get();
@@ -185,71 +183,95 @@ class Product extends AbstractReporting
 
     /**
      * Gets top-selling products by revenue.
-     * 
-     * @param  integer  $limit
-     * @return \Illuminate\Database\Eloquent\Collection
+     *
+     * @param  int  $limit
      */
-    public function getTopSellingProductsByRevenue($limit = null): collection
+    public function getTopSellingProductsByRevenue($limit = null): Collection
     {
-        $products = $this->orderItemRepository
-            ->with(['product', 'product.images'])
-            ->addSelect('*', DB::raw('SUM(base_total_invoiced - base_discount_refunded) as revenue'))
+        $items = $this->orderItemRepository
+            ->resetModel()
+            ->with(['product', 'product.attribute_family', 'product.attribute_values', 'product.images'])
+            ->leftJoin('orders', 'order_items.order_id', '=', 'orders.id')
+            ->addSelect('*', DB::raw('SUM(base_total_invoiced - base_amount_refunded) as revenue'))
             ->whereNull('parent_id')
+            ->whereIn('channel_id', $this->channelIds)
             ->whereBetween('order_items.created_at', [$this->startDate, $this->endDate])
+            ->having(DB::raw('SUM(base_total_invoiced - base_amount_refunded)'), '>', 0)
             ->groupBy('product_id')
             ->orderBy('revenue', 'DESC')
             ->limit($limit)
             ->get();
-        
 
-        $products->map(function($product) {
-            $product->formatted_revenue = core()->formatBasePrice($product->revenue);
-
-            $product->formatted_price = core()->formatBasePrice($product->price);
+        $items = $items->map(function ($item) {
+            return [
+                'id'                => $item->product_id,
+                'name'              => $item->name,
+                'price'             => $item->product?->price,
+                'formatted_price'   => core()->formatBasePrice($item->price),
+                'revenue'           => $item->revenue,
+                'formatted_revenue' => core()->formatBasePrice($item->revenue),
+                'images'            => $item->product?->images,
+            ];
         });
 
-        return $products;
+        return $items;
     }
 
     /**
      * Gets top-selling products by quantity.
-     * 
-     * @param  integer  $limit
-     * @return \Illuminate\Database\Eloquent\Collection
+     *
+     * @param  int  $limit
      */
-    public function getTopSellingProductsByQuantity($limit = null): collection
+    public function getTopSellingProductsByQuantity($limit = null): Collection
     {
-        $products = $this->orderItemRepository
-            ->with(['product', 'product.images'])
-            ->addSelect('*', DB::raw('SUM(qty_ordered) as total_qty_ordered'))
+        $items = $this->orderItemRepository
+            ->resetModel()
+            ->with(['product', 'product.attribute_family', 'product.attribute_values', 'product.images'])
+            ->leftJoin('orders', 'order_items.order_id', '=', 'orders.id')
+            ->addSelect('*', DB::raw('SUM(qty_invoiced - qty_refunded) as total_qty_ordered'))
             ->whereNull('parent_id')
+            ->whereIn('channel_id', $this->channelIds)
             ->whereBetween('order_items.created_at', [$this->startDate, $this->endDate])
+            ->having(DB::raw('SUM(qty_invoiced - qty_refunded)'), '>', 0)
             ->groupBy('product_id')
             ->orderBy('total_qty_ordered', 'DESC')
             ->limit($limit)
             ->get();
 
-        return $products;
+        $items = $items->map(function ($item) {
+            return [
+                'id'                => $item->product_id,
+                'name'              => $item->name,
+                'price'             => $item->product?->price,
+                'formatted_price'   => core()->formatBasePrice($item->price),
+                'total_qty_ordered' => $item->total_qty_ordered,
+                'images'            => $item->product?->images,
+            ];
+        });
+
+        return $items;
     }
 
     /**
      * Gets products with most orders.
-     * 
-     * @param  integer  $limit
-     * @return \Illuminate\Database\Eloquent\Collection
+     *
+     * @param  int  $limit
      */
-    public function getProductsWithMostReviews($limit = null): Collection
+    public function getProductsWithMostReviews($limit = null): EloquentCollection
     {
         $tablePrefix = DB::getTablePrefix();
 
         $products = $this->reviewRepository
+            ->resetModel()
+            ->leftJoin('product_channels', 'product_reviews.product_id', '=', 'product_channels.product_id')
             ->addSelect(
-                'product_id',
+                'product_reviews.product_id',
                 DB::raw('COUNT(*) as reviews')
             )
+            ->whereIn('channel_id', $this->channelIds)
             ->whereBetween('created_at', [$this->startDate, $this->endDate])
             ->where('status', 'approved')
-            ->groupBy('product_id')
+            ->groupBy('product_reviews.product_id')
             ->orderByDesc('reviews')
             ->limit($limit)
             ->get();
@@ -262,25 +284,58 @@ class Product extends AbstractReporting
     }
 
     /**
+     * Gets last search terms
+     *
+     * @param  int  $limit
+     */
+    public function getLastSearchTerms($limit = null): EloquentCollection
+    {
+        return $this->searchTermRepository
+            ->resetModel()
+            ->whereIn('channel_id', $this->channelIds)
+            ->whereBetween('updated_at', [$this->startDate, $this->endDate])
+            ->orderByDesc('updated_at')
+            ->limit($limit)
+            ->get();
+    }
+
+    /**
+     * Gets top search terms
+     *
+     * @param  int  $limit
+     */
+    public function getTopSearchTerms($limit = null): EloquentCollection
+    {
+        return $this->searchTermRepository
+            ->resetModel()
+            ->whereIn('channel_id', $this->channelIds)
+            ->orderByDesc('uses')
+            ->limit($limit)
+            ->get();
+    }
+
+    /**
      * Returns sold quantities over time
-     * 
+     *
      * @param  \Carbon\Carbon  $startDate
      * @param  \Carbon\Carbon  $endDate
      * @param  string  $period
-     * @return array
      */
     public function getTotalSoldQuantitiesOverTime($startDate, $endDate, $period = 'auto'): array
     {
         $config = $this->getTimeInterval($startDate, $endDate, $period);
 
-        $groupColumn = $config['group_column'];
+        $groupColumn = str_replace('created_at', 'order_items.created_at', $config['group_column']);
 
         $results = $this->orderItemRepository
+            ->resetModel()
+            ->leftJoin('orders', 'order_items.order_id', '=', 'orders.id')
             ->select(
                 DB::raw("$groupColumn AS date"),
                 DB::raw('COUNT(*) AS total')
             )
-            ->whereBetween('created_at', [$startDate, $endDate])
+            ->whereIn('channel_id', $this->channelIds)
+            ->whereBetween('order_items.created_at', [$startDate, $endDate])
             ->groupBy('date')
             ->get();
 
@@ -300,11 +355,10 @@ class Product extends AbstractReporting
 
     /**
      * Returns products added to wishlist over time
-     * 
+     *
      * @param  \Carbon\Carbon  $startDate
      * @param  \Carbon\Carbon  $endDate
      * @param  string  $period
-     * @return array
      */
     public function getTotalProductsAddedToWishlistOverTime($startDate, $endDate, $period = 'auto'): array
     {
@@ -313,10 +367,12 @@ class Product extends AbstractReporting
         $groupColumn = $config['group_column'];
 
         $results = $this->wishlistRepository
+            ->resetModel()
             ->select(
                 DB::raw("$groupColumn AS date"),
                 DB::raw('COUNT(*) AS total')
             )
+            ->whereIn('channel_id', $this->channelIds)
             ->whereBetween('created_at', [$startDate, $endDate])
             ->groupBy('date')
             ->get();

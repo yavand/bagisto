@@ -1,11 +1,11 @@
 {
   "src/Resources/assets/css/app.css": {
-    "file": "assets/app-b8468297.css",
+    "file": "assets/app-7339cde0.css",
     "isEntry": true,
     "src": "src/Resources/assets/css/app.css"
   },
   "src/Resources/assets/fonts/bagisto-admin.woff": {
-    "file": "assets/bagisto-admin-f12b0c7d.woff",
+    "file": "assets/bagisto-admin-c1c971d5.woff",
     "src": "src/Resources/assets/fonts/bagisto-admin.woff"
   },
   "src/Resources/assets/images/average-orders.svg": {
@@ -20,17 +20,25 @@
     "file": "assets/dark-logo-ea7984e7.svg",
     "src": "src/Resources/assets/images/dark-logo.svg"
   },
-  "src/Resources/assets/images/empty-placeholders/default-empty.svg": {
-    "file": "assets/default-empty-2c56169a.svg",
-    "src": "src/Resources/assets/images/empty-placeholders/default-empty.svg"
+  "src/Resources/assets/images/empty-placeholders/customers.svg": {
+    "file": "assets/customers-57f8166b.svg",
+    "src": "src/Resources/assets/images/empty-placeholders/customers.svg"
   },
-  "src/Resources/assets/images/empty-placeholders/orders-empty.svg": {
-    "file": "assets/orders-empty-5dd62d9d.svg",
-    "src": "src/Resources/assets/images/empty-placeholders/orders-empty.svg"
+  "src/Resources/assets/images/empty-placeholders/default.svg": {
+    "file": "assets/default-2c56169a.svg",
+    "src": "src/Resources/assets/images/empty-placeholders/default.svg"
   },
-  "src/Resources/assets/images/empty-placeholders/reviews-empty.svg": {
-    "file": "assets/reviews-empty-17309002.svg",
-    "src": "src/Resources/assets/images/empty-placeholders/reviews-empty.svg"
+  "src/Resources/assets/images/empty-placeholders/orders.svg": {
+    "file": "assets/orders-5dd62d9d.svg",
+    "src": "src/Resources/assets/images/empty-placeholders/orders.svg"
+  },
+  "src/Resources/assets/images/empty-placeholders/report-empty.svg": {
+    "file": "assets/report-empty-c3bb4a01.svg",
+    "src": "src/Resources/assets/images/empty-placeholders/report-empty.svg"
+  },
+  "src/Resources/assets/images/empty-placeholders/reviews.svg": {
+    "file": "assets/reviews-17309002.svg",
+    "src": "src/Resources/assets/images/empty-placeholders/reviews.svg"
   },
   "src/Resources/assets/images/error.svg": {
     "file": "assets/error-4179d5c7.svg",
@@ -88,13 +96,25 @@
     "file": "assets/captcha-061d77ab.svg",
     "src": "src/Resources/assets/images/settings/captcha.svg"
   },
+  "src/Resources/assets/images/settings/checkout.svg": {
+    "file": "assets/checkout-e5efdb8e.svg",
+    "src": "src/Resources/assets/images/settings/checkout.svg"
+  },
   "src/Resources/assets/images/settings/email.svg": {
     "file": "assets/email-5653e8d5.svg",
     "src": "src/Resources/assets/images/settings/email.svg"
   },
+  "src/Resources/assets/images/settings/inventory.svg": {
+    "file": "assets/inventory-d69907d8.svg",
+    "src": "src/Resources/assets/images/settings/inventory.svg"
+  },
   "src/Resources/assets/images/settings/invoice.svg": {
     "file": "assets/invoice-bbc6d6a8.svg",
     "src": "src/Resources/assets/images/settings/invoice.svg"
+  },
+  "src/Resources/assets/images/settings/magic-ai.svg": {
+    "file": "assets/magic-ai-2b88cb86.svg",
+    "src": "src/Resources/assets/images/settings/magic-ai.svg"
   },
   "src/Resources/assets/images/settings/order.svg": {
     "file": "assets/order-c8714dda.svg",
@@ -103,6 +123,10 @@
   "src/Resources/assets/images/settings/payment-method.svg": {
     "file": "assets/payment-method-10ea91e1.svg",
     "src": "src/Resources/assets/images/settings/payment-method.svg"
+  },
+  "src/Resources/assets/images/settings/product.svg": {
+    "file": "assets/product-357134fb.svg",
+    "src": "src/Resources/assets/images/settings/product.svg"
   },
   "src/Resources/assets/images/settings/settings.svg": {
     "file": "assets/settings-26b93165.svg",
@@ -132,6 +156,10 @@
     "file": "assets/theme-f4d870b8.svg",
     "src": "src/Resources/assets/images/settings/theme.svg"
   },
+  "src/Resources/assets/images/spinner.svg": {
+    "file": "assets/spinner-08c27ad5.svg",
+    "src": "src/Resources/assets/images/spinner.svg"
+  },
   "src/Resources/assets/images/total-orders.svg": {
     "file": "assets/total-orders-f1b2017e.svg",
     "src": "src/Resources/assets/images/total-orders.svg"
@@ -152,7 +180,7 @@
     "css": [
       "assets/app-c04ede37.css"
     ],
-    "file": "assets/app-cadfd1c4.js",
+    "file": "assets/app-5c9f2d83.js",
     "isEntry": true,
     "src": "src/Resources/assets/js/app.js"
   },

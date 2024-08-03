@@ -14,18 +14,25 @@ class GroupDataGrid extends DataGrid
      */
     public function prepareQueryBuilder()
     {
-        $queryBuilder = DB::table('customer_groups')->addSelect('id', 'code', 'name');
-
-        return $queryBuilder;
+        return DB::table('customer_groups')
+            ->select(
+                'id',
+                'code',
+                'name'
+            );
     }
 
+    /**
+     * Prepare columns.
+     *
+     * @return void
+     */
     public function prepareColumns()
     {
         $this->addColumn([
             'index'      => 'id',
             'label'      => trans('admin::app.customers.groups.index.datagrid.id'),
             'type'       => 'integer',
-            'searchable' => false,
             'filterable' => true,
             'sortable'   => true,
         ]);
@@ -34,7 +41,6 @@ class GroupDataGrid extends DataGrid
             'index'      => 'code',
             'label'      => trans('admin::app.customers.groups.index.datagrid.code'),
             'type'       => 'string',
-            'searchable' => false,
             'filterable' => true,
             'sortable'   => true,
         ]);
@@ -49,21 +55,28 @@ class GroupDataGrid extends DataGrid
         ]);
     }
 
+    /**
+     * Prepare mass actions.
+     *
+     * @return void
+     */
     public function prepareActions()
     {
         if (bouncer()->hasPermission('customers.groups.edit')) {
             $this->addAction([
+                'index'  => 'edit',
                 'icon'   => 'icon-edit',
                 'title'  => trans('admin::app.customers.groups.index.datagrid.edit'),
                 'method' => 'PUT',
                 'url'    => function ($row) {
-                    // return route('admin.groups.edit', $row->id);
+                    return '';
                 },
             ]);
         }
 
         if (bouncer()->hasPermission('customers.groups.delete')) {
             $this->addAction([
+                'index'  => 'delete',
                 'icon'   => 'icon-delete',
                 'title'  => trans('admin::app.customers.groups.index.datagrid.delete'),
                 'method' => 'DELETE',

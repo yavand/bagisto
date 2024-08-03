@@ -19,7 +19,7 @@ class ChannelDataGrid extends DataGrid
                 $leftJoin->on('channel_translations.channel_id', '=', 'channels.id')
                     ->where('channel_translations.locale', core()->getRequestedLocaleCode());
             })
-            ->addSelect(
+            ->select(
                 'channels.id',
                 'channels.code',
                 'channel_translations.locale',
@@ -41,7 +41,6 @@ class ChannelDataGrid extends DataGrid
             'index'      => 'id',
             'label'      => trans('admin::app.settings.channels.index.datagrid.id'),
             'type'       => 'integer',
-            'searchable' => false,
             'filterable' => true,
             'sortable'   => true,
         ]);

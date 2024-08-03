@@ -1,13 +1,20 @@
-<div class="tabs">
-    @if ($items = Arr::get($menu->items, implode('.children.', array_slice(explode('.', $menu->currentKey), 0, 2)) . '.children'))
-        <div class="flex gap-[15px] mb-[15px] pt-[8px] border-b-[2px] max-sm:hidden dark:border-gray-800">
-            @foreach ($items as $key => $item)
-                <a href="{{ $item['url'] }}">
-                    <div class="{{  $menu->getActive($item) ? "mb-[-1px] border-blue-600 border-b-[2px] transition" : '' }} pb-[14px] px-[10px] text-[16px] font-medium text-gray-600 dark:text-gray-300 cursor-pointer">
-                        @lang($item['name'])
+@php
+    $tabs = menu()->getCurrentActiveMenu('admin')?->getChildren();
+@endphp
+
+@if (
+    $tabs
+    && $tabs->isNotEmpty()
+)
+    <div class="tabs">
+        <div class="mb-4 flex gap-4 border-b-2 pt-2 dark:border-gray-800 max-sm:hidden">
+            @foreach ($tabs as $tab)
+                <a href="{{ $tab->getUrl() }}">
+                    <div class="{{ $tab->isActive() ? "-mb-px border-blue-600 border-b-2 transition" : '' }} pb-3.5 px-2.5 text-base font-medium text-gray-600 dark:text-gray-300 cursor-pointer">
+                        {{ $tab->getName() }}
                     </div>
                 </a>
             @endforeach
         </div>
-    @endif
-</div>
+    </div>
+@endif

@@ -14,9 +14,13 @@ class LocalesDataGrid extends DataGrid
      */
     public function prepareQueryBuilder()
     {
-        $queryBuilder = DB::table('locales')->addSelect('id', 'code', 'name', 'direction');
-
-        return $queryBuilder;
+        return DB::table('locales')
+            ->select(
+                'id',
+                'code',
+                'name',
+                'direction'
+            );
     }
 
     /**
@@ -30,7 +34,6 @@ class LocalesDataGrid extends DataGrid
             'index'      => 'id',
             'label'      => trans('admin::app.settings.locales.index.datagrid.id'),
             'type'       => 'integer',
-            'searchable' => false,
             'filterable' => true,
             'sortable'   => true,
         ]);
@@ -54,11 +57,22 @@ class LocalesDataGrid extends DataGrid
         ]);
 
         $this->addColumn([
-            'index'      => 'direction',
-            'label'      => trans('admin::app.settings.locales.index.datagrid.direction'),
-            'type'       => 'string',
-            'searchable' => true,
-            'filterable' => true,
+            'index'              => 'direction',
+            'label'              => trans('admin::app.settings.locales.index.datagrid.direction'),
+            'type'               => 'string',
+            'searchable'         => true,
+            'filterable'         => true,
+            'filterable_type'    => 'dropdown',
+            'filterable_options' => [
+                [
+                    'label' => trans('admin::app.settings.locales.index.datagrid.ltr'),
+                    'value' => 'ltr',
+                ],
+                [
+                    'label' => trans('admin::app.settings.locales.index.datagrid.rtl'),
+                    'value' => 'rtl',
+                ],
+            ],
             'sortable'   => true,
             'closure'    => function ($value) {
                 if ($value->direction == 'ltr') {
@@ -79,6 +93,7 @@ class LocalesDataGrid extends DataGrid
     {
         if (bouncer()->hasPermission('settings.locales.edit')) {
             $this->addAction([
+                'index'  => 'edit',
                 'icon'   => 'icon-edit',
                 'title'  => trans('admin::app.settings.locales.index.datagrid.edit'),
                 'method' => 'GET',
@@ -90,6 +105,7 @@ class LocalesDataGrid extends DataGrid
 
         if (bouncer()->hasPermission('settings.locales.delete')) {
             $this->addAction([
+                'index'  => 'delete',
                 'icon'   => 'icon-delete',
                 'title'  => trans('admin::app.settings.locales.index.datagrid.delete'),
                 'method' => 'DELETE',

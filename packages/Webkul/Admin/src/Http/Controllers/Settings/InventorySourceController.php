@@ -4,10 +4,10 @@ namespace Webkul\Admin\Http\Controllers\Settings;
 
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Event;
-use Webkul\Admin\Http\Controllers\Controller;
-use Webkul\Inventory\Repositories\InventorySourceRepository;
 use Webkul\Admin\DataGrids\Settings\InventorySourcesDataGrid;
+use Webkul\Admin\Http\Controllers\Controller;
 use Webkul\Admin\Http\Requests\InventorySourceRequest;
+use Webkul\Inventory\Repositories\InventorySourceRepository;
 
 class InventorySourceController extends Controller
 {
@@ -16,9 +16,7 @@ class InventorySourceController extends Controller
      *
      * @return void
      */
-    public function __construct(protected InventorySourceRepository $inventorySourceRepository)
-    {
-    }
+    public function __construct(protected InventorySourceRepository $inventorySourceRepository) {}
 
     /**
      * Display a listing of the resource.
@@ -28,7 +26,7 @@ class InventorySourceController extends Controller
     public function index()
     {
         if (request()->ajax()) {
-            return app(InventorySourcesDataGrid::class)->toJson();
+            return datagrid(InventorySourcesDataGrid::class)->process();
         }
 
         return view('admin::settings.inventory-sources.index');
@@ -84,10 +82,9 @@ class InventorySourceController extends Controller
     /**
      * Show the form for editing the specified resource.
      *
-     * @param  int  $id
      * @return \Illuminate\View\View
      */
-    public function edit($id)
+    public function edit(int $id)
     {
         $inventorySource = $this->inventorySourceRepository->findOrFail($id);
 
@@ -97,10 +94,9 @@ class InventorySourceController extends Controller
     /**
      * Update the specified resource in storage.
      *
-     * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(InventorySourceRequest $inventorySourceRequest, $id)
+    public function update(InventorySourceRequest $inventorySourceRequest, int $id)
     {
         Event::dispatch('inventory.inventory_source.update.before', $id);
 
@@ -138,11 +134,8 @@ class InventorySourceController extends Controller
 
     /**
      * Remove the specified resource from storage.
-     *
-     * @param int $id
-     * @return \Illuminate\Http\JsonResponse
      */
-    public function destroy($id): JsonResponse
+    public function destroy(int $id): JsonResponse
     {
         $this->inventorySourceRepository->findOrFail($id);
 
@@ -158,14 +151,14 @@ class InventorySourceController extends Controller
             Event::dispatch('inventory.inventory_source.delete.after', $id);
 
             return new JsonResponse([
-                'message' => trans('admin::app.settings.inventory-sources.delete-success')
+                'message' => trans('admin::app.settings.inventory-sources.delete-success'),
             ]);
         } catch (\Exception $e) {
             report($e);
         }
 
         return new JsonResponse([
-            'message' => trans('admin::app.settings.inventory-sources.delete-failed', ['name' => 'admin::app.settings.inventory_sources.index.title'])
+            'message' => trans('admin::app.settings.inventory-sources.delete-failed', ['name' => 'admin::app.settings.inventory_sources.index.title']),
         ], 500);
     }
 }

@@ -2,79 +2,57 @@
 
 namespace Webkul\Admin\Http\Controllers;
 
-use Illuminate\Support\Arr;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 use Webkul\Admin\Http\Requests\ConfigurationForm;
 use Webkul\Core\Repositories\CoreConfigRepository;
-use Webkul\Core\Tree;
 
 class ConfigurationController extends Controller
 {
     /**
-     * Tree instance.
-     *
-     * @var \Webkul\Core\Tree
-     */
-    protected $configTree;
-
-    /**
      * Create a new controller instance.
-     *
-     * @return void
      */
-    public function __construct(protected CoreConfigRepository $coreConfigRepository)
-    {
-        $this->prepareConfigTree();
-    }
+    public function __construct(protected CoreConfigRepository $coreConfigRepository) {}
 
     /**
-     * Prepares config tree.
-     *
-     * @return void
+     * Display a listing of the resource.
      */
-    public function prepareConfigTree()
+    public function index(): View
     {
-        $tree = Tree::create();
-
-        foreach (config('core') as $item) {
-            $tree->add($item);
+        if (
+            request()->route('slug')
+            && request()->route('slug2')
+        ) {
+            return view('admin::configuration.edit');
         }
 
-        $tree->items = core()->sortItems($tree->items);
-
-        $this->configTree = $tree;
+        return view('admin::configuration.index');
     }
 
     /**
      * Display a listing of the resource.
-     *
-     * @return \Illuminate\View\View
      */
-    public function index()
+    public function search(): JsonResponse
     {
-        $groups = Arr::get(
-            $this->configTree->items,
-            request()->route('slug') . '.children.' . request()->route('slug2') . '.children'
+        $results = $this->coreConfigRepository->search(
+            system_config()->getItems(),
+            request()->query('query')
         );
 
-        if ($groups) {
-            return view('admin::configuration.edit', [
-                'config' => $this->configTree,
-                'groups' => $groups,
-            ]);
-        }
-
-        return view('admin::configuration.index', ['config' => $this->configTree]);
+        return new JsonResponse([
+            'data' => $results,
+        ]);
     }
 
     /**
      * Store a newly created resource in storage.
-     *
-     * @return \Illuminate\Http\RedirectResponse
      */
-    public function store(ConfigurationForm $request)
+    public function store(ConfigurationForm $request): RedirectResponse
     {
-        $data = $request->request->all();
+        $data = $request->all();
 
         if (isset($data['sales']['carriers'])) {
             $atLeastOneCarrierEnabled = false;
@@ -104,7 +82,7 @@ class ConfigurationController extends Controller
             }
 
             if (! $atLeastOnePaymentMethodEnabled) {
-                session()->flash('error', trans('admin::app.configuration.enable-at-least-one-payment'));
+                session()->flash('error', trans('admin::app.configuration.index.enable-at-least-one-payment'));
 
                 return redirect()->back();
             }
@@ -119,14 +97,12 @@ class ConfigurationController extends Controller
 
     /**
      * Download the file for the specified resource.
-     *
-     * @return \Symfony\Component\HttpFoundation\StreamedResponse
      */
-    public function download()
+    public function download(): StreamedResponse
     {
         $path = request()->route()->parameters()['path'];
 
-        $fileName = 'configuration/' . $path;
+        $fileName = 'configuration/'.$path;
 
         $config = $this->coreConfigRepository->findOneByField('value', $fileName);
 

@@ -15,7 +15,7 @@ class CatalogRuleDataGrid extends DataGrid
     public function prepareQueryBuilder()
     {
         $queryBuilder = DB::table('catalog_rules')
-            ->addSelect(
+            ->select(
                 'catalog_rules.id',
                 'name',
                 'status',
@@ -40,7 +40,6 @@ class CatalogRuleDataGrid extends DataGrid
             'index'      => 'id',
             'label'      => trans('admin::app.marketing.promotions.catalog-rules.index.datagrid.id'),
             'type'       => 'integer',
-            'searchable' => false,
             'filterable' => true,
             'sortable'   => true,
         ]);
@@ -55,25 +54,25 @@ class CatalogRuleDataGrid extends DataGrid
         ]);
 
         $this->addColumn([
-            'index'      => 'starts_from',
-            'label'      => trans('admin::app.marketing.promotions.catalog-rules.index.datagrid.start'),
-            'type'       => 'datetime',
-            'searchable' => false,
-            'filterable' => true,
-            'sortable'   => true,
-            'closure'    => function ($value) {
+            'index'           => 'starts_from',
+            'label'           => trans('admin::app.marketing.promotions.catalog-rules.index.datagrid.start'),
+            'type'            => 'datetime',
+            'filterable'      => true,
+            'filterable_type' => 'datetime_range',
+            'sortable'        => true,
+            'closure'         => function ($value) {
                 return $value->starts_from ?? '-';
             },
         ]);
 
         $this->addColumn([
-            'index'      => 'ends_till',
-            'label'      => trans('admin::app.marketing.promotions.catalog-rules.index.datagrid.end'),
-            'type'       => 'datetime',
-            'searchable' => false,
-            'filterable' => true,
-            'sortable'   => true,
-            'closure'    => function ($value) {
+            'index'           => 'ends_till',
+            'label'           => trans('admin::app.marketing.promotions.catalog-rules.index.datagrid.end'),
+            'type'            => 'datetime',
+            'filterable'      => true,
+            'filterable_type' => 'datetime_range',
+            'sortable'        => true,
+            'closure'         => function ($value) {
                 return $value->ends_till ?? '-';
             },
         ]);
@@ -111,7 +110,7 @@ class CatalogRuleDataGrid extends DataGrid
      */
     public function prepareActions()
     {
-        if (bouncer()->hasPermission('marketing.promotions.catalog-rules.edit')) {
+        if (bouncer()->hasPermission('marketing.promotions.catalog_rules.edit')) {
             $this->addAction([
                 'icon'   => 'icon-edit',
                 'title'  => trans('admin::app.marketing.promotions.catalog-rules.index.datagrid.edit'),
@@ -122,7 +121,7 @@ class CatalogRuleDataGrid extends DataGrid
             ]);
         }
 
-        if (bouncer()->hasPermission('marketing.promotions.catalog-rules.delete')) {
+        if (bouncer()->hasPermission('marketing.promotions.catalog_rules.delete')) {
             $this->addAction([
                 'icon'   => 'icon-delete',
                 'title'  => trans('admin::app.marketing.promotions.catalog-rules.index.datagrid.delete'),

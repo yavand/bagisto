@@ -3,17 +3,17 @@
 namespace Webkul\Admin\Http\Controllers\Catalog;
 
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Event;
-use Webkul\Admin\Http\Controllers\Controller;
-use Webkul\Core\Repositories\ChannelRepository;
-use Webkul\Admin\Http\Requests\MassUpdateRequest;
-use Webkul\Admin\Http\Requests\MassDestroyRequest;
-use Webkul\Admin\Http\Requests\CategoryRequest;
 use Webkul\Admin\DataGrids\Catalog\CategoryDataGrid;
-use Webkul\Category\Repositories\CategoryRepository;
-use Webkul\Attribute\Repositories\AttributeRepository;
-use Webkul\Admin\DataGrids\Catalog\CategoryProductDataGrid;
+use Webkul\Admin\Http\Controllers\Controller;
+use Webkul\Admin\Http\Requests\CategoryRequest;
+use Webkul\Admin\Http\Requests\MassDestroyRequest;
+use Webkul\Admin\Http\Requests\MassUpdateRequest;
 use Webkul\Admin\Http\Resources\CategoryTreeResource;
+use Webkul\Attribute\Repositories\AttributeRepository;
+use Webkul\Category\Repositories\CategoryRepository;
+use Webkul\Core\Repositories\ChannelRepository;
 
 class CategoryController extends Controller
 {
@@ -26,9 +26,7 @@ class CategoryController extends Controller
         protected ChannelRepository $channelRepository,
         protected CategoryRepository $categoryRepository,
         protected AttributeRepository $attributeRepository
-    )
-    {
-    }
+    ) {}
 
     /**
      * Display a listing of the resource.
@@ -38,7 +36,7 @@ class CategoryController extends Controller
     public function index()
     {
         if (request()->ajax()) {
-            return app(CategoryDataGrid::class)->toJson();
+            return datagrid(CategoryDataGrid::class)->process();
         }
 
         return view('admin::catalog.categories.index');
@@ -67,7 +65,7 @@ class CategoryController extends Controller
     {
         Event::dispatch('catalog.category.create.before');
 
-        $data = request()->only([
+        $category = $this->categoryRepository->create($categoryRequest->only([
             'locale',
             'name',
             'parent_id',
@@ -81,10 +79,8 @@ class CategoryController extends Controller
             'display_mode',
             'attributes',
             'logo_path',
-            'banner_path'
-        ]);
-
-        $category = $this->categoryRepository->create($data);
+            'banner_path',
+        ]));
 
         Event::dispatch('catalog.category.create.after', $category);
 
@@ -96,10 +92,9 @@ class CategoryController extends Controller
     /**
      * Show the form for editing the specified resource.
      *
-     * @param  int  $id
      * @return \Illuminate\View\View
      */
-    public function edit($id)
+    public function edit(int $id)
     {
         $category = $this->categoryRepository->findOrFail($id);
 
@@ -111,29 +106,25 @@ class CategoryController extends Controller
     }
 
     /**
-     * Show the products of specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\View\View
-     */
-    public function products($id)
-    {
-        if (request()->ajax()) {
-            return app(ProductDataGrid::class)->toJson();
-        }
-    }
-
-    /**
      * Update the specified resource in storage.
      *
-     * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(CategoryRequest $categoryRequest, $id)
+    public function update(CategoryRequest $categoryRequest, int $id)
     {
         Event::dispatch('catalog.category.update.before', $id);
 
-        $category = $this->categoryRepository->update($categoryRequest->all(), $id);
+        $category = $this->categoryRepository->update($categoryRequest->only(
+            'locale',
+            'parent_id',
+            'logo_path',
+            'banner_path',
+            'position',
+            'display_mode',
+            'status',
+            'attributes',
+            $categoryRequest->input('locale')
+        ), $id);
 
         Event::dispatch('catalog.category.update.after', $category);
 
@@ -144,48 +135,43 @@ class CategoryController extends Controller
 
     /**
      * Remove the specified resource from storage.
-     *
-     * @param int $id
-     * @return \Illuminate\Http\JsonResponse
      */
-    public function destroy($id): JsonResponse
+    public function destroy(int $id): JsonResponse
     {
         $category = $this->categoryRepository->findOrFail($id);
 
         if (! $this->isCategoryDeletable($category)) {
-            return new JsonResponse(['message' => trans('admin::app.catalog.categories.delete-category-root')], 400);
+            return new JsonResponse([
+                'message' => trans('admin::app.catalog.categories.delete-category-root'),
+            ], 400);
         }
 
         try {
             Event::dispatch('catalog.category.delete.before', $id);
 
-            $this->categoryRepository->delete($id);
+            $category->delete($id);
 
             Event::dispatch('catalog.category.delete.after', $id);
 
             return new JsonResponse([
-                'message' => trans('admin::app.catalog.categories.delete-success', ['name' => 'admin::app.catalog.categories.category'
-            ])]);
+                'message' => trans('admin::app.catalog.categories.delete-success'),
+            ]);
         } catch (\Exception $e) {
+            return new JsonResponse([
+                'message' => trans('admin::app.catalog.categories.delete-failed'),
+            ], 500);
         }
-
-        return new JsonResponse([
-            'message' => trans('admin::app.catalog.categories.delete-failed', ['name' => 'admin::app.catalog.categories.category'
-        ])], 500);
     }
 
     /**
      * Remove the specified resources from database.
-     *
-     * @param MassDestroyRequest $massDestroyRequest
-     * @return \Illuminate\Http\JsonResponse
      */
     public function massDestroy(MassDestroyRequest $massDestroyRequest): JsonResponse
     {
         $suppressFlash = true;
 
         $categoryIds = $massDestroyRequest->input('indices');
-        
+
         foreach ($categoryIds as $categoryId) {
             $category = $this->categoryRepository->find($categoryId);
 
@@ -205,7 +191,7 @@ class CategoryController extends Controller
                         Event::dispatch('catalog.category.delete.after', $categoryId);
                     } catch (\Exception $e) {
                         return new JsonResponse([
-                            'message' => trans('admin::app.catalog.categories.delete-failed')
+                            'message' => trans('admin::app.catalog.categories.delete-failed'),
                         ], 500);
                     }
                 }
@@ -217,7 +203,7 @@ class CategoryController extends Controller
             || $suppressFlash == true
         ) {
             return new JsonResponse([
-                'message' => trans('admin::app.catalog.categories.delete-success')
+                'message' => trans('admin::app.catalog.categories.delete-success'),
             ]);
         }
 
@@ -232,24 +218,22 @@ class CategoryController extends Controller
     public function massUpdate(MassUpdateRequest $massUpdateRequest)
     {
         try {
-            $data = $massUpdateRequest->all();
-    
-            $categoryIds = $data['indices'];
-    
+            $categoryIds = $massUpdateRequest->input('indices');
+
             foreach ($categoryIds as $categoryId) {
                 Event::dispatch('catalog.categories.mass-update.before', $categoryId);
-    
+
                 $category = $this->categoryRepository->find($categoryId);
-    
+
                 $category->status = $massUpdateRequest->input('value');
-                
+
                 $category->save();
-    
+
                 Event::dispatch('catalog.categories.mass-update.after', $category);
             }
-    
+
             return new JsonResponse([
-                'message' => trans('admin::app.catalog.categories.update-success')
+                'message' => trans('admin::app.catalog.categories.update-success'),
             ]);
         } catch (\Exception $e) {
             return new JsonResponse([
@@ -278,35 +262,25 @@ class CategoryController extends Controller
 
     /**
      * Get all categories in tree format.
-     * 
-     * @return \Illuminate\Http\JsonResponse
      */
-    public function tree()
+    public function tree(): JsonResource
     {
-        $categories = $this->categoryRepository->getVisibleCategoryTree(core()->getCurrentChannel()->root_category_id);
+        $categories = $this->categoryRepository->getVisibleCategoryTree(core()->getRequestedChannel()->root_category_id);
 
         return CategoryTreeResource::collection($categories);
     }
 
     /**
-     * Result of search customer.
+     * Get all the searched categories.
      *
      * @return \Illuminate\Http\JsonResponse
      */
     public function search()
     {
-        $results = [];
-
-        $categories = $this->categoryRepository->scopeQuery(function($query) {
-            return $query
-                ->select('categories.*')
-                ->leftJoin('category_translations', function ($query) {
-                    $query->on('categories.id', '=', 'category_translations.category_id')
-                        ->where('category_translations.locale', app()->getLocale());
-                })
-                ->where('category_translations.name', 'like', '%' . urldecode(request()->input('query')) . '%')
-                ->orderBy('created_at', 'desc');
-        })->paginate(10);
+        $categories = $this->categoryRepository->getAll([
+            'name'   => request()->input('query'),
+            'locale' => app()->getLocale(),
+        ]);
 
         return response()->json($categories);
     }

@@ -19,13 +19,15 @@ class Kernel extends ConsoleKernel
     /**
      * Define the application's command schedule.
      *
-     * @param  \Illuminate\Console\Scheduling\Schedule  $schedule
      * @return void
      */
     protected function schedule(Schedule $schedule)
     {
         $schedule->command('invoice:cron')->dailyAt('3:00');
-        $schedule->command('product:index --type=price')->dailyAt('24:00');
+
+        $schedule->command('indexer:index --type=price')->dailyAt('00:01');
+
+        $schedule->command('product:price-rule:index')->dailyAt('00:01');
     }
 
     /**

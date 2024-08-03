@@ -4,11 +4,10 @@ namespace Webkul\Admin\Http\Controllers\CMS;
 
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Event;
-use Webkul\CMS\Repositories\CmsRepository;
-use Webkul\Admin\Http\Controllers\Controller;
 use Webkul\Admin\DataGrids\CMS\CMSPageDataGrid;
+use Webkul\Admin\Http\Controllers\Controller;
 use Webkul\Admin\Http\Requests\MassDestroyRequest;
-
+use Webkul\CMS\Repositories\PageRepository;
 
 class PageController extends Controller
 {
@@ -17,9 +16,7 @@ class PageController extends Controller
      *
      * @return void
      */
-    public function __construct(protected CmsRepository $cmsRepository)
-    {
-    }
+    public function __construct(protected PageRepository $pageRepository) {}
 
     /**
      * Loads the index page showing the static pages resources.
@@ -29,7 +26,7 @@ class PageController extends Controller
     public function index()
     {
         if (request()->ajax()) {
-            return app(CMSPageDataGrid::class)->toJson();
+            return datagrid(CMSPageDataGrid::class)->process();
         }
 
         return view('admin::cms.index');
@@ -59,9 +56,9 @@ class PageController extends Controller
             'html_content' => 'required',
         ]);
 
-        Event::dispatch('cms.pages.create.before');
+        Event::dispatch('cms.page.create.before');
 
-        $data = request()->only([
+        $page = $this->pageRepository->create(request()->only([
             'page_title',
             'channels',
             'html_content',
@@ -69,11 +66,9 @@ class PageController extends Controller
             'url_key',
             'meta_keywords',
             'meta_description',
-        ]);
+        ]));
 
-        $page = $this->cmsRepository->create($data);
-
-        Event::dispatch('cms.pages.create.after', $page);
+        Event::dispatch('cms.page.create.after', $page);
 
         session()->flash('success', trans('admin::app.cms.create-success'));
 
@@ -83,12 +78,11 @@ class PageController extends Controller
     /**
      * To edit a previously created CMS page.
      *
-     * @param  int  $id
      * @return \Illuminate\View\View
      */
-    public function edit($id)
+    public function edit(int $id)
     {
-        $page = $this->cmsRepository->findOrFail($id);
+        $page = $this->pageRepository->findOrFail($id);
 
         return view('admin::cms.edit', compact('page'));
     }
@@ -96,35 +90,32 @@ class PageController extends Controller
     /**
      * To update the previously created CMS page in storage.
      *
-     * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update($id)
+    public function update(int $id)
     {
         $locale = core()->getRequestedLocaleCode();
 
         $this->validate(request(), [
-            $locale . '.url_key'      => ['required', new \Webkul\Core\Rules\Slug, function ($attribute, $value, $fail) use ($id) {
-                if (! $this->cmsRepository->isUrlKeyUnique($id, $value)) {
+            $locale.'.url_key'      => ['required', new \Webkul\Core\Rules\Slug, function ($attribute, $value, $fail) use ($id) {
+                if (! $this->pageRepository->isUrlKeyUnique($id, $value)) {
                     $fail(trans('admin::app.cms.index.already-taken', ['name' => 'Page']));
                 }
             }],
-            $locale . '.page_title'   => 'required',
-            $locale . '.html_content' => 'required',
+            $locale.'.page_title'     => 'required',
+            $locale.'.html_content'   => 'required',
             'channels'                => 'required',
         ]);
 
-        Event::dispatch('cms.pages.update.before', $id);
+        Event::dispatch('cms.page.update.before', $id);
 
-        $data = [
+        $page = $this->pageRepository->update([
             $locale    => request()->input($locale),
             'channels' => request()->input('channels'),
             'locale'   => $locale,
-        ];
+        ], $id);
 
-        $page = $this->cmsRepository->update($data, $id);
-
-        Event::dispatch('cms.pages.update.after', $page);
+        Event::dispatch('cms.page.update.after', $page);
 
         session()->flash('success', trans('admin::app.cms.update-success'));
 
@@ -133,41 +124,39 @@ class PageController extends Controller
 
     /**
      * To delete the previously create CMS page.
-     *
-     * @param int $id
-     * @return \Illuminate\Http\JsonResponse
      */
-    public function delete($id): JsonResponse
+    public function delete(int $id): JsonResponse
     {
-        Event::dispatch('cms.pages.delete.before', $id);
+        try {
+            Event::dispatch('cms.page.delete.before', $id);
 
-        $this->cmsRepository->delete($id);
+            $this->pageRepository->delete($id);
 
-        Event::dispatch('cms.pages.delete.after', $id);
+            Event::dispatch('cms.page.delete.after', $id);
 
-        return new JsonResponse(['message' => trans('admin::app.cms.delete-success')]);
+            return new JsonResponse(['message' => trans('admin::app.cms.delete-success')]);
+        } catch (\Exception $e) {
+            return new JsonResponse(['message' => trans('admin::app.cms.no-resource')]);
+        }
     }
 
     /**
      * To mass delete the CMS resource from storage.
-     *
-     * @param MassDestroyRequest $massDestroyRequest
-     * @return \Illuminate\Http\JsonResponse
      */
     public function massDelete(MassDestroyRequest $massDestroyRequest): JsonResponse
     {
         $indices = $massDestroyRequest->input('indices');
 
         foreach ($indices as $index) {
-            Event::dispatch('cms.pages.delete.before', $index);
+            Event::dispatch('cms.page.delete.before', $index);
 
-            $this->cmsRepository->delete($index);
+            $this->pageRepository->delete($index);
 
-            Event::dispatch('cms.pages.delete.after', $index);
+            Event::dispatch('cms.page.delete.after', $index);
         }
 
         return new JsonResponse([
-            'message' => trans('admin::app.cms.index.datagrid.mass-delete-success')
+            'message' => trans('admin::app.cms.index.datagrid.mass-delete-success'),
         ], 200);
     }
 }

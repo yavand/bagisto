@@ -1,43 +1,55 @@
 <v-datagrid-export {{ $attributes }}>
-    <div class="p-[6px] items-center cursor-pointer transition-all hover:bg-gray-200 dark:hover:bg-gray-800 hover:rounded-[6px]">
-        <p class="text-gray-600 dark:text-gray-300 font-semibold leading-[24px]">
-            @lang('admin::app.export.export')
-        </p>
+    <div class="transparent-button hover:bg-gray-200 dark:text-white dark:hover:bg-gray-800">
+        <span class="icon-admin-export text-xl text-gray-600"></span>
+
+        @lang('admin::app.export.export')
     </div>
 </v-datagrid-export>
 
 @pushOnce('scripts')
-    <script type="text/x-template" id="v-datagrid-export-template">
-        <div class="p-[6px] items-center cursor-pointer transition-all hover:bg-gray-200 dark:hover:bg-gray-800 hover:rounded-[6px]">
+    <script
+        type="text/x-template"
+        id="v-datagrid-export-template"
+    >
+        <div>
             <x-admin::modal ref="exportModal">
                 <x-slot:toggle>
-                    <p class="text-gray-600 dark:text-gray-300 font-semibold leading-[24px]">
+                    <button class="transparent-button hover:bg-gray-200 dark:text-white dark:hover:bg-gray-800">
+                        <span class="icon-admin-export text-xl text-gray-600"></span>
+
                         @lang('admin::app.export.export')
-                    </p>
-                </x-slot:toggle>
+                    </button>
+                </x-slot>
 
                 <x-slot:header>
-                    <p class="text-[18px] text-gray-800 dark:text-white font-bold">
+                    <p class="text-lg font-bold text-gray-800 dark:text-white">
                         @lang('admin::app.export.download')
                     </p>
-                </x-slot:header>
+                </x-slot>
 
                 <x-slot:content>
-                    <div class="p-[16px]">
-                        <x-admin::form action="">
-                            <x-admin::form.control-group>
-                                <x-admin::form.control-group.control
-                                    type="select"
-                                    name="format"
-                                    v-model="format"
-                                >
-                                    <option value="xls">@lang('admin::app.export.xls')</option>
-                                    <option value="csv">@lang('admin::app.export.csv')</option>
-                                </x-admin::form.control-group.control>
-                            </x-admin::form.control-group>
-                        </x-admin::form>
-                    </div>
-                </x-slot:content>
+                    <x-admin::form action="">
+                        <x-admin::form.control-group class="!mb-0">
+                            <x-admin::form.control-group.control
+                                type="select"
+                                name="format"
+                                v-model="format"
+                            >
+                                <option value="csv">
+                                    @lang('admin::app.export.csv')
+                                </option>
+
+                                <option value="xls">
+                                    @lang('admin::app.export.xls')
+                                </option>
+
+                                <option value="xlsx">
+                                    @lang('admin::app.export.xlsx')
+                                </option>
+                            </x-admin::form.control-group.control>
+                        </x-admin::form.control-group>
+                    </x-admin::form>
+                </x-slot>
 
                 <x-slot:footer>
                     <button
@@ -47,7 +59,7 @@
                     >
                         @lang('admin::app.export.export')
                     </button>
-                </x-slot:footer>
+                </x-slot>
             </x-admin::modal>
         </div>
     </script>
@@ -73,43 +85,63 @@
             },
 
             methods: {
+                /**
+                 * Registers events to update properties and trigger the download process.
+                 *
+                 * @returns {void}
+                 */
                 registerEvents() {
                     this.$emitter.on('change-datagrid', this.updateProperties);
                 },
 
-                updateProperties({available, applied }) {
+                /**
+                 * Updates the available and applied properties with new values.
+                 *
+                 * @param {object} data - Object containing available and applied properties.
+                 * @returns {void}
+                 */
+                updateProperties({ src, available, applied }) {
+                    if (this.src !== src) {
+                        return;
+                    }
+
                     this.available = available;
 
                     this.applied = applied;
                 },
 
+                /**
+                 * Initiates the download process for exporting data.
+                 *
+                 * @returns {void}
+                 */
                 download() {
-                    if (! this.available?.records?.length) {                        
+                    if (! this.available?.records?.length) {
                         this.$emitter.emit('add-flash', { type: 'warning', message: '@lang('admin::app.export.no-records')' });
 
                         this.$refs.exportModal.toggle();
                     } else {
                         let params = {
                             export: 1,
-    
+
                             format: this.format,
-    
+
                             sort: {},
-    
+
                             filters: {},
                         };
-    
+
                         if (
                             this.applied.sort.column &&
                             this.applied.sort.order
                         ) {
                             params.sort = this.applied.sort;
                         }
-    
+
                         this.applied.filters.columns.forEach(column => {
                             params.filters[column.index] = column.value;
                         });
-    
+
                         this.$axios
                             .get(this.src, {
                                 params,
@@ -119,11 +151,26 @@
                                 const url = window.URL.createObjectURL(new Blob([response.data]));
 
                                 /**
+                                 * Extracting filename from content-disposition header.
+                                 */
+                                let filename = `${(Math.random() + 1).toString(36).substring(7)}.${this.format}`;
+
+                                const contentDisposition = response.headers['content-disposition'];
+
+                                if (contentDisposition && contentDisposition.indexOf('attachment') !== -1) {
+                                    const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+
+                                    if (filenameMatch != null && filenameMatch[1]) {
+                                        filename = filenameMatch[1].replace(/['"]/g, '');
+                                    }
+                                }
+
+                                /**
                                  * Link generation.
                                  */
                                 const link = document.createElement('a');
                                 link.href = url;
-                                link.setAttribute('download', `${(Math.random() + 1).toString(36).substring(7)}.${this.format}`);
+                                link.setAttribute('download', filename);
 
                                 /**
                                  * Adding a link to a document, clicking on the link, and then removing the link.

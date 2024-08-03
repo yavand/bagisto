@@ -88,7 +88,7 @@ class Order extends Model implements OrderContract
      */
     public function getCustomerFullNameAttribute(): string
     {
-        return $this->customer_first_name . ' ' . $this->customer_last_name;
+        return $this->customer_first_name.' '.$this->customer_last_name;
     }
 
     /**
@@ -266,8 +266,6 @@ class Order extends Model implements OrderContract
 
     /**
      * Checks if cart have stockable items
-     *
-     * @return boolean
      */
     public function haveStockableItems(): bool
     {
@@ -282,19 +280,16 @@ class Order extends Model implements OrderContract
 
     /**
      * Checks if new shipment is allow or not
-     *
-     * @return bool
      */
     public function canShip(): bool
     {
-        if ($this->status === self::STATUS_FRAUD) {
-            return false;
-        }
-
         foreach ($this->items as $item) {
             if (
                 $item->canShip()
-                && $item->order->status !== self::STATUS_CLOSED
+                && ! in_array($item->order->status, [
+                    self::STATUS_CLOSED,
+                    self::STATUS_FRAUD,
+                ])
             ) {
                 return true;
             }
@@ -305,19 +300,16 @@ class Order extends Model implements OrderContract
 
     /**
      * Checks if new invoice is allow or not
-     *
-     * @return bool
      */
     public function canInvoice(): bool
     {
-        if ($this->status === self::STATUS_FRAUD) {
-            return false;
-        }
-
         foreach ($this->items as $item) {
             if (
                 $item->canInvoice()
-                && $item->order->status !== self::STATUS_CLOSED
+                && ! in_array($item->order->status, [
+                    self::STATUS_CLOSED,
+                    self::STATUS_FRAUD,
+                ])
             ) {
                 return true;
             }
@@ -328,8 +320,6 @@ class Order extends Model implements OrderContract
 
     /**
      * Verify if a invoice is still unpaid
-     *
-     * @return bool
      */
     public function hasOpenInvoice(): bool
     {
@@ -346,31 +336,10 @@ class Order extends Model implements OrderContract
 
     /**
      * Checks if order can be canceled or not
-     *
-     * @return bool
      */
     public function canCancel(): bool
     {
-        if (
-            $this->payment->method == 'cashondelivery'
-            && core()->getConfigData('sales.payment_methods.cashondelivery.generate_invoice')
-        ) {
-            return false;
-        }
-
-        if (
-            $this->payment->method == 'moneytransfer'
-            && core()->getConfigData('sales.payment_methods.moneytransfer.generate_invoice')
-        ) {
-            return false;
-        }
-
-        if ($this->status === self::STATUS_FRAUD) {
-            return false;
-        }
-
-        $pendingInvoice = $this->invoices->where('state', 'pending')
-            ->first();
+        $pendingInvoice = $this->invoices->where('state', 'pending')->first();
 
         if ($pendingInvoice) {
             return true;
@@ -379,7 +348,10 @@ class Order extends Model implements OrderContract
         foreach ($this->items as $item) {
             if (
                 $item->canCancel()
-                && $item->order->status !== self::STATUS_CLOSED
+                && ! in_array($item->order->status, [
+                    self::STATUS_CLOSED,
+                    self::STATUS_FRAUD,
+                ])
             ) {
                 return true;
             }
@@ -390,26 +362,16 @@ class Order extends Model implements OrderContract
 
     /**
      * Checks if order can be refunded or not
-     *
-     * @return bool
      */
     public function canRefund(): bool
     {
-        if ($this->status === self::STATUS_FRAUD) {
-            return false;
-        }
-
-        $pendingInvoice = $this->invoices->where('state', 'pending')
-            ->first();
-
-        if ($pendingInvoice) {
-            return false;
-        }
-
         foreach ($this->items as $item) {
             if (
                 $item->qty_to_refund > 0
-                && $item->order->status !== self::STATUS_CLOSED
+                && ! in_array($item->order->status, [
+                    self::STATUS_CLOSED,
+                    self::STATUS_FRAUD,
+                ])
             ) {
                 return true;
             }
@@ -423,9 +385,25 @@ class Order extends Model implements OrderContract
     }
 
     /**
+     * Checks if order can be reorder or not
+     */
+    public function canReorder(): bool
+    {
+        if ($this->is_guest) {
+            return false;
+        }
+
+        foreach ($this->items as $item) {
+            if (! $item->product?->getTypeInstance()->isSaleable()) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
      * Create a new factory instance for the model.
-     *
-     * @return Factory
      */
     protected static function newFactory(): Factory
     {

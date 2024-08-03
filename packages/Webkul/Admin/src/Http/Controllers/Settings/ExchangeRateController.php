@@ -2,12 +2,12 @@
 
 namespace Webkul\Admin\Http\Controllers\Settings;
 
-use Illuminate\Support\Facades\Event;
 use Illuminate\Http\JsonResponse;
-use Webkul\Admin\Http\Controllers\Controller;
-use Webkul\Core\Repositories\ExchangeRateRepository;
-use Webkul\Core\Repositories\CurrencyRepository;
+use Illuminate\Support\Facades\Event;
 use Webkul\Admin\DataGrids\Settings\ExchangeRatesDataGrid;
+use Webkul\Admin\Http\Controllers\Controller;
+use Webkul\Core\Repositories\CurrencyRepository;
+use Webkul\Core\Repositories\ExchangeRateRepository;
 
 class ExchangeRateController extends Controller
 {
@@ -19,9 +19,7 @@ class ExchangeRateController extends Controller
     public function __construct(
         protected ExchangeRateRepository $exchangeRateRepository,
         protected CurrencyRepository $currencyRepository
-    )
-    {
-    }
+    ) {}
 
     /**
      * Display a listing of the resource.
@@ -31,7 +29,7 @@ class ExchangeRateController extends Controller
     public function index()
     {
         if (request()->ajax()) {
-            return app(ExchangeRatesDataGrid::class)->toJson();
+            return datagrid(ExchangeRatesDataGrid::class)->process();
         }
 
         $currencies = $this->currencyRepository->with('exchange_rate')->all();
@@ -41,8 +39,6 @@ class ExchangeRateController extends Controller
 
     /**
      * Store a newly created resource in storage.
-     *
-     * @return \Illuminate\Http\JsonResponse
      */
     public function store(): JsonResponse
     {
@@ -55,7 +51,7 @@ class ExchangeRateController extends Controller
 
         $exchangeRate = $this->exchangeRateRepository->create(request()->only([
             'target_currency',
-            'rate'
+            'rate',
         ]));
 
         Event::dispatch('core.exchange_rate.create.after', $exchangeRate);
@@ -67,11 +63,8 @@ class ExchangeRateController extends Controller
 
     /**
      * Show the form for editing the specified resource.
-     *
-     * @param int $id
-     * @return \Illuminate\Http\JsonResponse
      */
-    public function edit($id): JsonResponse
+    public function edit(int $id): JsonResponse
     {
         $currencies = $this->currencyRepository->all();
 
@@ -79,21 +72,19 @@ class ExchangeRateController extends Controller
 
         return new JsonResponse([
             'data' => [
-                'currencies' => $currencies,
+                'currencies'   => $currencies,
                 'exchangeRate' => $exchangeRate,
-            ]
+            ],
         ]);
     }
 
     /**
      * Update the specified resource in storage.
-     *
-     * @return \Illuminate\Http\JsonResponse
      */
     public function update(): JsonResponse
     {
         $this->validate(request(), [
-            'target_currency' => ['required', 'unique:currency_exchange_rates,target_currency,' . request()->id],
+            'target_currency' => ['required', 'unique:currency_exchange_rates,target_currency,'.request()->id],
             'rate'            => 'required|numeric',
         ]);
 
@@ -101,7 +92,7 @@ class ExchangeRateController extends Controller
 
         $exchangeRate = $this->exchangeRateRepository->update(request()->only([
             'target_currency',
-            'rate'
+            'rate',
         ]), request()->id);
 
         Event::dispatch('core.exchange_rate.update.after', $exchangeRate);
@@ -119,44 +110,39 @@ class ExchangeRateController extends Controller
     public function updateRates()
     {
         try {
-            app(config('services.exchange_api.' . config('services.exchange_api.default') . '.class'))->updateRates();
+            app(config('services.exchange_api.'.config('services.exchange_api.default').'.class'))->updateRates();
 
-            session()->flash('success', trans('admin::app.settings.exchange-rates.update-success'));
+            session()->flash('success', trans('admin::app.settings.exchange-rates.index.update-success'));
         } catch (\Exception $e) {
             session()->flash('error', $e->getMessage());
         }
 
-        return redirect()->back();
+        return redirect()->route('admin.settings.exchange_rates.index');
     }
 
     /**
      * Remove the specified resource from storage.
-     *
-     * @param int $id
-     * @return void
      */
-    public function destroy($id)
+    public function destroy(int $id): JsonResponse
     {
-        $this->exchangeRateRepository->findOrFail($id);
-
         try {
+            $this->exchangeRateRepository->findOrFail($id);
+
             Event::dispatch('core.exchange_rate.delete.before', $id);
 
             $this->exchangeRateRepository->delete($id);
 
             Event::dispatch('core.exchange_rate.delete.after', $id);
 
-            return response()->json([
+            return new JsonResponse([
                 'message' => trans('admin::app.settings.exchange-rates.index.delete-success'),
             ], 200);
         } catch (\Exception $e) {
             report($e);
         }
 
-        return response()->json([
-            'message' => trans(
-                'admin::app.settings.exchange-rates.index.delete-error'
-            )
+        return new JsonResponse([
+            'message' => trans('admin::app.settings.exchange-rates.index.delete-error'),
         ], 500);
     }
 }

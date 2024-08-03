@@ -2,35 +2,44 @@
 
 namespace Webkul\Admin\Mail\Order;
 
-use Illuminate\Bus\Queueable;
-use Illuminate\Mail\Mailable;
-use Illuminate\Queue\SerializesModels;
-use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Mail\Mailables\Address;
+use Illuminate\Mail\Mailables\Content;
+use Illuminate\Mail\Mailables\Envelope;
+use Webkul\Admin\Mail\Mailable;
+use Webkul\Sales\Contracts\Order;
 
 class CreatedNotification extends Mailable
 {
-    use Queueable, SerializesModels;
-
     /**
      * Create a new message instance.
      *
-     * @param  \Webkul\Sales\Contracts\Order  $order
      * @return void
      */
-    public function __construct(public $order)
+    public function __construct(public Order $order) {}
+
+    /**
+     * Get the message envelope.
+     */
+    public function envelope(): Envelope
     {
+        return new Envelope(
+            to: [
+                new Address(
+                    core()->getAdminEmailDetails()['email'],
+                    core()->getAdminEmailDetails()['name']
+                ),
+            ],
+            subject: trans('admin::app.emails.orders.created.subject'),
+        );
     }
 
     /**
-     * Build the message.
-     *
-     * @return $this
+     * Get the message content definition.
      */
-    public function build()
+    public function content(): Content
     {
-        return $this->from(core()->getSenderEmailDetails()['email'], core()->getSenderEmailDetails()['name'])
-            ->to(core()->getAdminEmailDetails()['email'], core()->getAdminEmailDetails()['name'])
-            ->subject(trans('admin::app.emails.orders.created.subject'))
-            ->view('admin::emails.orders.created');
+        return new Content(
+            view: 'admin::emails.orders.created',
+        );
     }
 }

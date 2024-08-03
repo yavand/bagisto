@@ -14,9 +14,12 @@ class RolesDataGrid extends DataGrid
      */
     public function prepareQueryBuilder()
     {
-        $queryBuilder = DB::table('roles')->addSelect('id', 'name', 'permission_type');
-
-        return $queryBuilder;
+        return DB::table('roles')
+            ->select(
+                'id',
+                'name',
+                'permission_type'
+            );
     }
 
     /**
@@ -30,8 +33,6 @@ class RolesDataGrid extends DataGrid
             'index'      => 'id',
             'label'      => trans('admin::app.settings.roles.index.datagrid.id'),
             'type'       => 'integer',
-            'searchable' => false,
-            'width'      => '40px',
             'filterable' => true,
             'sortable'   => true,
         ]);
@@ -46,11 +47,22 @@ class RolesDataGrid extends DataGrid
         ]);
 
         $this->addColumn([
-            'index'      => 'permission_type',
-            'label'      => trans('admin::app.settings.roles.index.datagrid.permission-type'),
-            'type'       => 'string',
-            'searchable' => true,
-            'filterable' => true,
+            'index'              => 'permission_type',
+            'label'              => trans('admin::app.settings.roles.index.datagrid.permission-type'),
+            'type'               => 'string',
+            'searchable'         => true,
+            'filterable'         => true,
+            'filterable_type'    => 'dropdown',
+            'filterable_options' => [
+                [
+                    'label' => trans('admin::app.settings.roles.index.datagrid.custom'),
+                    'value' => 'custom',
+                ],
+                [
+                    'label' => trans('admin::app.settings.roles.index.datagrid.all'),
+                    'value' => 'all',
+                ],
+            ],
             'sortable'   => true,
         ]);
     }

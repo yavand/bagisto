@@ -3,13 +3,12 @@
 namespace Webkul\Admin\Http\Controllers\Sales;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Event;
+use Webkul\Admin\DataGrids\Sales\OrderInvoiceDataGrid;
 use Webkul\Admin\Http\Controllers\Controller;
-use Webkul\Sales\Repositories\OrderRepository;
-use Webkul\Sales\Repositories\InvoiceRepository;
-use Webkul\Admin\DataGrids\Sales\OrderInvoicesDataGrid;
-use Webkul\Admin\DataGrids\Sales\InvoicesTransactionsDatagrid;
-use Webkul\Admin\Listeners\Invoice as InvoiceListener;
 use Webkul\Core\Traits\PDFHandler;
+use Webkul\Sales\Repositories\InvoiceRepository;
+use Webkul\Sales\Repositories\OrderRepository;
 
 class InvoiceController extends Controller
 {
@@ -23,10 +22,7 @@ class InvoiceController extends Controller
     public function __construct(
         protected OrderRepository $orderRepository,
         protected InvoiceRepository $invoiceRepository,
-        protected InvoiceListener $invoiceListener
-    )
-    {
-    }
+    ) {}
 
     /**
      * Display a listing of the resource.
@@ -36,7 +32,7 @@ class InvoiceController extends Controller
     public function index()
     {
         if (request()->ajax()) {
-            return app(OrderInvoicesDataGrid::class)->toJson();
+            return datagrid(OrderInvoiceDataGrid::class)->process();
         }
 
         return view('admin::sales.invoices.index');
@@ -45,21 +41,9 @@ class InvoiceController extends Controller
     /**
      * Show the form for creating a new resource.
      *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function invoiceTransactions($id)
-    {
-        return app(InvoicesTransactionsDatagrid::class)->toJson();
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @param  int  $orderId
      * @return \Illuminate\View\View
      */
-    public function create($orderId)
+    public function create(int $orderId)
     {
         $order = $this->orderRepository->findOrFail($orderId);
 
@@ -71,12 +55,11 @@ class InvoiceController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
+     * (Store) a newly created resource in storage.
      *
-     * @param  int  $orderId
      * @return \Illuminate\Http\Response
      */
-    public function store($orderId)
+    public function store(int $orderId)
     {
         $order = $this->orderRepository->findOrFail($orderId);
 
@@ -87,6 +70,7 @@ class InvoiceController extends Controller
         }
 
         $this->validate(request(), [
+            'invoice.items'   => 'required|array',
             'invoice.items.*' => 'required|numeric|min:0',
         ]);
 
@@ -114,10 +98,9 @@ class InvoiceController extends Controller
     /**
      * Show the view for the specified resource.
      *
-     * @param  int  $id
      * @return \Illuminate\View\View
      */
-    public function view($id)
+    public function view(int $id)
     {
         $invoice = $this->invoiceRepository->findOrFail($id);
 
@@ -127,10 +110,9 @@ class InvoiceController extends Controller
     /**
      * Send duplicate invoice.
      *
-     * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function sendDuplicate(Request $request, $id)
+    public function sendDuplicateEmail(Request $request, int $id)
     {
         $request->validate([
             'email' => 'required|email',
@@ -140,26 +122,25 @@ class InvoiceController extends Controller
 
         $invoice->email = request()->input('email');
 
-        $this->invoiceListener->afterCreated($invoice);
+        Event::dispatch('sales.invoice.send_duplicate_email', $invoice);
 
         session()->flash('success', trans('admin::app.sales.invoices.view.invoice-sent'));
 
-        return redirect()->back();
+        return redirect()->route('admin.sales.invoices.view', $invoice->id);
     }
 
     /**
      * Print and download the for the specified resource.
      *
-     * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function printInvoice($id)
+    public function printInvoice(int $id)
     {
         $invoice = $this->invoiceRepository->findOrFail($id);
 
         return $this->downloadPDF(
             view('admin::sales.invoices.pdf', compact('invoice'))->render(),
-            'invoice-' . $invoice->created_at->format('d-m-Y')
+            'invoice-'.$invoice->created_at->format('d-m-Y')
         );
     }
 }
