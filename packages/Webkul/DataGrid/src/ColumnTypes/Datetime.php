@@ -6,7 +6,6 @@ use Webkul\DataGrid\Column;
 use Webkul\DataGrid\Enums\DateRangeOptionEnum;
 use Webkul\DataGrid\Enums\FilterTypeEnum;
 use Webkul\DataGrid\Exceptions\InvalidColumnException;
-use Webkul\DataGrid\Exceptions\InvalidColumnExpressionException;
 
 class Datetime extends Column
 {
@@ -49,12 +48,10 @@ class Datetime extends Column
                 $requestedDates = ! $rangeOption
                     ? [[$requestedDates, $requestedDates]]
                     : [[$rangeOption['from'], $rangeOption['to']]];
-            } elseif (is_array($requestedDates)) {
-                foreach ($requestedDates as $value) {
-                    $scopeQueryBuilder->whereBetween($this->columnName, [$value[0] ?? '', $value[1] ?? '']);
-                }
-            } else {
-                throw new InvalidColumnExpressionException('Only string and array are allowed for datetime column type.');
+            }
+
+            foreach ($requestedDates as $value) {
+                $scopeQueryBuilder->whereBetween($this->columnName, [$value[0] ?? '', $value[1] ?? '']);
             }
         });
     }

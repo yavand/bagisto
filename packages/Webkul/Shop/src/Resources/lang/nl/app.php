@@ -420,7 +420,6 @@ return [
                 'mobile' => [
                     'currencies' => 'Valuta',
                     'locales'    => 'Taal',
-                    'login'      => 'Registreren of Inloggen',
                 ],
             ],
 

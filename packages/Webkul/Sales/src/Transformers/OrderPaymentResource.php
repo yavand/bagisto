@@ -17,7 +17,6 @@ class OrderPaymentResource extends JsonResource
         return [
             'method'       => $this->method,
             'method_title' => $this->method_title,
-            'additional'   => $request->input('orderData'),
         ];
     }
 }
