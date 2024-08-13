@@ -65,7 +65,7 @@
                     @lang('admin::app.dashboard.index.stock-threshold')
                 </p>
 
-                <!-- Products List -->  
+                <!-- Products List -->
                 @include('admin::dashboard.stock-threshold-products')
             </div>
             {!! view_render_event('bagisto.admin.dashboard.stock_thereshold.after') !!}
@@ -98,7 +98,7 @@
             {!! view_render_event('bagisto.admin.dashboard.store_stats.after') !!}
         </div>
     </div>
-    
+
     @pushOnce('scripts')
         <script
             type="module"
@@ -119,7 +119,7 @@
                                 class="inline-flex w-full cursor-pointer appearance-none items-center justify-between gap-x-2 rounded-md border bg-white px-2.5 py-1.5 text-center text-sm leading-6 text-gray-600 transition-all marker:shadow hover:border-gray-400 focus:border-gray-400 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300 dark:hover:border-gray-400 dark:focus:border-gray-400"
                             >
                                 @{{ channels.find(channel => channel.code == filters.channel).name }}
-                                
+
                                 <span class="icon-sort-down text-2xl"></span>
                             </button>
                         </x-slot>
@@ -167,12 +167,12 @@
                             },
                             ...@json(core()->getAllChannels()),
                         ],
-                        
+
                         filters: {
                             channel: '',
 
                             start: "{{ $startDate->format('Y-m-d') }}",
-                            
+
                             end: "{{ $endDate->format('Y-m-d') }}",
                         }
                     }
