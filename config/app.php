@@ -237,6 +237,8 @@ return [
         Webkul\Tax\Providers\TaxServiceProvider::class,
         Webkul\Theme\Providers\ThemeServiceProvider::class,
         Webkul\User\Providers\UserServiceProvider::class,
+        \DemoPackage\Providers\DemoPackageServiceProvider::class,
+        \Zarinpal\Providers\ZarinpalServiceProvider::class
     ])->toArray(),
 
     /*
