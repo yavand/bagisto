@@ -27,3 +27,11 @@ Route::group(['middleware' => ['web']], function () {
         Route::get('/verification', [ZarinpalController::class, 'verification'])->name('zarinpal.verification');
     });
 });
+
+
+Route::get('/mytest',function (){
+//   \Illuminate\Support\Facades\Artisan::call('route:clear');
+
+    echo "Hello World";
+
+});
