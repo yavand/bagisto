@@ -9,6 +9,18 @@ use Webkul\Shop\Http\Requests\Customer\LoginRequest;
 
 class CustomerController extends APIController
 {
+    public function __construct()
+    {
+        $this->middleware('auth:api', ['except' => ['login']]);
+    }
+    protected function respondWithToken($token)
+    {
+        return response()->json([
+            'access_token' => $token,
+            'token_type' => 'bearer',
+            'expires_in' => 2 * 60
+        ]);
+    }
     /**
      * Login Customer
      *
@@ -16,6 +28,14 @@ class CustomerController extends APIController
      */
     public function login(LoginRequest $request)
     {
+        $credentials = request(['email', 'password']);
+
+        if (! $token = auth()->attempt($credentials)) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+
+        return $this->respondWithToken($token);
+
         if (! auth()->guard('customer')->attempt($request->only(['email', 'password']))) {
             return response()->json([
                 'message' => trans('shop::app.customers.login-form.invalid-credentials'),

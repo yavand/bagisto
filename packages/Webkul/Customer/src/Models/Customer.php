@@ -8,6 +8,7 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
 use Laravel\Sanctum\HasApiTokens;
+use PHPOpenSourceSaver\JWTAuth\Contracts\JWTSubject;
 use Shetabit\Visitor\Traits\Visitor;
 use Webkul\Checkout\Models\CartProxy;
 use Webkul\Core\Models\ChannelProxy;
@@ -19,7 +20,7 @@ use Webkul\Sales\Models\InvoiceProxy;
 use Webkul\Sales\Models\OrderProxy;
 use Webkul\Shop\Mail\Customer\ResetPasswordNotification;
 
-class Customer extends Authenticatable implements CustomerContract
+class Customer extends Authenticatable implements CustomerContract,JWTSubject
 {
     use HasApiTokens, HasFactory, Notifiable, Visitor;
 
@@ -299,5 +300,15 @@ class Customer extends Authenticatable implements CustomerContract
     protected static function newFactory()
     {
         return CustomerFactory::new();
+    }
+
+    public function getJWTIdentifier()
+    {
+        return $this->getKey();
+    }
+
+    public function getJWTCustomClaims()
+    {
+        return [];
     }
 }
