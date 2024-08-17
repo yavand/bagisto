@@ -8,11 +8,12 @@ use Webkul\Shop\Http\Controllers\API\CompareController;
 use Webkul\Shop\Http\Controllers\API\CoreController;
 use Webkul\Shop\Http\Controllers\API\CustomerController;
 use Webkul\Shop\Http\Controllers\API\OnepageController;
+use Webkul\Shop\Http\Controllers\API\OtpAuthController;
 use Webkul\Shop\Http\Controllers\API\ProductController;
 use Webkul\Shop\Http\Controllers\API\ReviewController;
 use Webkul\Shop\Http\Controllers\API\WishlistController;
 
-Route::group(['middleware' => ['locale', 'theme', 'currency'], 'prefix' => 'api'], function () {
+Route::group(['prefix' => 'api'], function () {
     Route::controller(CoreController::class)->prefix('core')->group(function () {
         Route::get('countries', 'getCountries')->name('shop.api.core.countries');
 
@@ -87,6 +88,16 @@ Route::group(['middleware' => ['locale', 'theme', 'currency'], 'prefix' => 'api'
         Route::post('payment-methods', 'storePaymentMethod')->name('shop.checkout.onepage.payment_methods.store');
 
         Route::post('orders', 'storeOrder')->name('shop.checkout.onepage.orders.store');
+    });
+
+    /**
+     * OTP Login routes.
+     */
+    Route::controller(OtpAuthController::class)->prefix('otp')->group(function () {
+        Route::post('login', 'loginWithSmsOtp')->name('shop.api.customers.sms.otp.create');
+        Route::post('otp-check', 'verifyPhoneAndLogin')->name('shop.api.customers.sms.otp.check');
+        Route::post('me', 'me')->middleware('auth:sanctum')->name('shop.api.customers.sms.otp.me');
+
     });
 
     /**

@@ -12,6 +12,11 @@ class VerifyCsrfToken extends Middleware
      * @var array<int, string>
      */
     protected $except = [
-        //
+        'api/otp/otp-login',
+        'api/otp/otp-check',
+        'api/otp/login',
+        'api/otp/me',
+        'admin/catalog/products/create',
+        'api/customer/login',
     ];
 }
