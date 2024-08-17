@@ -10,19 +10,24 @@ use Webkul\Sales\Transformers\OrderResource;
 class ZarinpalController extends Controller
 {
 
-    public function __construct(protected OrderRepository $orderRepository,)
+    private $cart;
+
+    public function __construct(protected OrderRepository $orderRepository)
     {
+        $this->cart = Cart::getCart();
     }
 
     public function pay(Request $request){
+
+
         $response = zarinpal()
-            ->merchantId('13da7b5d-20e4-49a3-b54e-75c8d614f720') // تعیین مرچنت کد در حین اجرا - اختیاری
-            ->amount(3000) // مبلغ تراکنش
+            ->merchantId(env('ZARINPAL_MERCHANT_ID'))
+            ->amount($this->cart->grand_total)
             ->request()
-            ->description('transaction info') // توضیحات تراکنش
-            ->callbackUrl('https://bagisto.test/zarinpal/verification') // آدرس برگشت پس از پرداخت
-            ->mobile('09123456789') // شماره موبایل مشتری - اختیاری
-            ->email('name@domain.com') // ایمیل مشتری - اختیاری
+            ->description('خرید از سایت')
+            ->callbackUrl('https://bagisto.test/zarinpal/verification')
+//            ->mobile('09123456789') //
+            ->email($this->cart->customer_email)
             ->send();
 
         if (!$response->success()) {
@@ -41,8 +46,8 @@ class ZarinpalController extends Controller
         $status = request()->query('Status'); // دریافت کوئری استرینگ ارسال شده توسط زرین پال
 
         $response = zarinpal()
-            ->merchantId('13da7b5d-20e4-49a3-b54e-75c8d614f720') // تعیین مرچنت کد در حین اجرا - اختیاری
-            ->amount(3000)
+            ->merchantId(env('ZARINPAL_MERCHANT_ID')) // تعیین مرچنت کد در حین اجرا - اختیاری
+            ->amount($this->cart->grand_total)
             ->verification()
             ->authority($authority)
             ->send();
