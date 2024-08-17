@@ -5,18 +5,24 @@ namespace Webkul\Shop\Http\Controllers\API;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\Event;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
+use Melipayamak;
 use Symfony\Component\HttpFoundation\Response as ResponseAlias;
 use Webkul\Customer\Models\Customer;
 use Webkul\Shop\Http\Requests\Customer\SmsOtpRequest;
 use Webkul\Shop\Models\OtpToken;
-use Melipayamak;
+use Webkul\Shop\Services\GraphQlService;
+
 class OtpAuthController extends APIController
 {
     private $timer = 120;
+
+    public function __construct(
+        protected GraphQlService $graphQlService
+    )
+    {
+    }
 
     public function me()
     {
@@ -109,8 +115,9 @@ class OtpAuthController extends APIController
         }
 
         $email = "newCustomer".rand(100000,999999)."@example.com";
+        $password = "123456789";
 
-        $user = Customer::where('phone', $request->input('phone'))->firstOr(function () use ($email, $request) {
+        $user = Customer::where('phone', $request->input('phone'))->firstOr(function () use ($password, $email, $request) {
 
             return Customer::create([
                 'first_name'  => 'کاربر',
@@ -118,7 +125,7 @@ class OtpAuthController extends APIController
                 'phone'       => $request->input('phone'),
                 'email'       => $email,
                 'token'       => md5(uniqid(rand(), true)),
-                'password'                  => bcrypt('123456789'),
+                'password'                  => bcrypt($password),
                 'api_token'                 => Str::random(80),
                 'is_verified'               => ! core()->getConfigData('customer.settings.email.verification'),
                 'channel_id'                => core()->getCurrentChannel()->id,
@@ -130,7 +137,14 @@ class OtpAuthController extends APIController
         if(empty($user->email)){
             $user->email = $email;
             $user->save();
+        }else{
+            $email = $user->email;
         }
+
+        $oldPass = $user->password;
+        $user->password = $password;
+        $user->save();
+
         auth()->guard('customer')->login($user);
 
         ///////////////////////
@@ -145,6 +159,8 @@ class OtpAuthController extends APIController
         Event::dispatch('customer.after.login', auth()->guard()->user());
 
         $token = auth()->guard('customer')->user()->createToken('YourTokenName')->plainTextToken;
+
+        $token = $this->graphQlService->loginCustomer($user->email, $password);
 
         /**
          * Event passed to prepare cart after login.
