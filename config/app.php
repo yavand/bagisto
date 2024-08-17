@@ -237,8 +237,9 @@ return [
         Webkul\Tax\Providers\TaxServiceProvider::class,
         Webkul\Theme\Providers\ThemeServiceProvider::class,
         Webkul\User\Providers\UserServiceProvider::class,
-        \DemoPackage\Providers\DemoPackageServiceProvider::class,
-        \Zarinpal\Providers\ZarinpalServiceProvider::class
+        DemoPackage\Providers\DemoPackageServiceProvider::class,
+        Zarinpal\Providers\ZarinpalServiceProvider::class,
+        Melipayamak\Laravel\ServiceProvider::class,
     ])->toArray(),
 
     /*
@@ -264,5 +265,6 @@ return [
         'ProductImage' => Webkul\Product\Facades\ProductImage::class,
         'ProductVideo' => Webkul\Product\Facades\ProductVideo::class,
         'Redis'        => Illuminate\Support\Facades\Redis::class,
+        Melipayamak\Laravel\Facade::class,
     ])->toArray(),
 ];

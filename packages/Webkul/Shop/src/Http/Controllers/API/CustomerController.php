@@ -21,14 +21,6 @@ class CustomerController extends APIController
     )
     {
     }
-    protected function respondWithToken($token)
-    {
-        return response()->json([
-            'access_token' => $token,
-            'token_type' => 'bearer',
-            'expires_in' => 2 * 60
-        ]);
-    }
     /**
      * Login Customer
      *
@@ -81,7 +73,6 @@ class CustomerController extends APIController
                 'token' => $token,
                 'redirect_route' => route('shop.home.index')
             ]);
-        return $this->dataResponse(['message' => 'success', 'redirect_route' => route('shop.home.index')]);
 
     }
 

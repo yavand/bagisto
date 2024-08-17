@@ -94,7 +94,7 @@ Route::group(['prefix' => 'api'], function () {
      * OTP Login routes.
      */
     Route::controller(OtpAuthController::class)->prefix('otp')->group(function () {
-        Route::post('login', 'loginWithSmsOtp')->name('shop.api.customers.sms.otp.create');
+        Route::post('request-code', 'requestCode')->name('shop.api.customers.sms.otp.create');
         Route::post('otp-check', 'verifyPhoneAndLogin')->name('shop.api.customers.sms.otp.check');
         Route::post('me', 'me')->middleware('auth:sanctum')->name('shop.api.customers.sms.otp.me');
 
@@ -104,7 +104,7 @@ Route::group(['prefix' => 'api'], function () {
      * Login routes.
      */
     Route::controller(CustomerController::class)->prefix('customer')->group(function () {
-        Route::post('login', 'login')->name('shop.api.customers.session.login');
+        Route::post('login', 'login')->name('shop.api.customers.session.create');
         Route::post('register', 'register')->name('shop.api.customers.session.register');
     });
 

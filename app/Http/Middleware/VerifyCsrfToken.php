@@ -19,5 +19,6 @@ class VerifyCsrfToken extends Middleware
         'admin/catalog/products/create',
         'api/customer/login',
         'api/customer/register',
+        'api/otp/request-code',
     ];
 }

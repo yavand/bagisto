@@ -5,16 +5,15 @@ namespace Webkul\Shop\Http\Controllers\API;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Cookie;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
-use Melipayamak;
-use Melipayamak\MelipayamakApi;
 use Symfony\Component\HttpFoundation\Response as ResponseAlias;
 use Webkul\Customer\Models\Customer;
 use Webkul\Shop\Http\Requests\Customer\SmsOtpRequest;
 use Webkul\Shop\Models\OtpToken;
-
+use Melipayamak;
 class OtpAuthController extends APIController
 {
     private $timer = 120;
@@ -23,7 +22,8 @@ class OtpAuthController extends APIController
     {
         dd(auth()->user());
     }
-    public function loginWithSmsOtp(SmsOtpRequest $request)
+
+    public function requestCode(SmsOtpRequest $request)
     {
         $phone = $request->input(['phone']);
 
@@ -51,122 +51,37 @@ class OtpAuthController extends APIController
                 'expire_at' => Carbon::now()->addSeconds($this->timer),
             ]);
 
-        return $this->freeResponse("success","success sent Otp code", ResponseAlias::HTTP_OK);
+        return $this->freeResponse("success","otp sent successfully", ResponseAlias::HTTP_OK);
     }
-    public function loginWithSmsOtptmp(SmsOtpRequest $request)
-    {
-
-        // درخواست GraphQL که می‌خواهید ارسال کنید
-        $query = <<<GQL
-mutation {
-    userLogin(input : {
-      email: "admin@example.com"
-      password: "admin123"
-    })
-    {
-      status
-      success
-      accessToken
-      tokenType
-      expiresIn
-      user {
-          id
-          name
-          email
-          password
-          apiToken
-          roleId
-          status
-          createdAt
-          updatedAt
-      }
-    }
-}
-GQL;
-
-        // ارسال درخواست HTTP به GraphQL endpoint
-        $response = Http::post('http://bagisto.test/graphql', [
-            'query' => $query,
-        ]);
-
-        // تبدیل پاسخ به JSON
-        $data = $response->json();
-
-        // دسترسی به توکن و بازگشت پاسخ
-        $accessToken = $data['data']['userLogin']['accessToken'] ?? null;
-
-        if ($accessToken) {
-            return response()->json([
-                'status' => 'success',
-                'token' => $accessToken,
-            ]);
-        } else {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Login failed',
-            ]);
-        }
-        dd('ssdsd');
-
-
-
-
-        $credentials =['ali.yazdani324@gmail.com', '123456789'];
-
-        if (! $token = auth()->attempt($credentials)) {
-            return response()->json(['error' => 'Unauthorized'], 401);
-        }
-
-        return $this->respondWithToken($token);
-
-        $phone = $request->input(['phone']);
-
-        if (OtpToken::where('receiver', $phone)->first()?->updated_at != OtpToken::where('receiver', $phone)->first()?->created_at
-            &&
-            (OtpToken::where('receiver', $phone)->first()?->updated_at->diff(now())->i * 60) + OtpToken::where('receiver', $phone)->first()?->updated_at->diff(now())->s < $this->timer) {
-            return $this->freeResponse('error', 'شما قبلا کد را دریافت کرده اید!', 403);
-
-        }
-
-        $code = rand(10000, 99999);
-
-        $text = 'کد ورود شما : '.$code;
-        $smsResult = $this->sendSms($phone, $text);
-
-        if (! $smsResult) {
-            return $this->freeResponse('error', 'Error When Send SMS', 500);
-        }
-
-        OtpToken::updateOrCreate(
-            ['receiver' => $phone],
-            [
-                'token'     => $code,
-                'sent_at'   => Carbon::now(),
-                'expire_at' => Carbon::now()->addSeconds($this->timer),
-            ]);
-
-        return \response()->json([
-            'message' => 'success',
-        ]);
-    }
-
     public function sendSms(mixed $phone, string $text)
     {
-        return true;
+
         try {
-            $username = '09127068288';
-            $password = 'LMT84';
-            $smsSoap = Melipayamak::sms('soap');
-            $api = new MelipayamakApi($username, $password);
-            $sms = $api->sms();
-            $to = '09391681434';
-            $from = '50004000850804';
+
+            $sms = Melipayamak::sms();
+            $to = $phone;
+            $from = '50004001068288';
             $response = $sms->send($to, $from, $text);
             $json = json_decode($response);
-            echo $json->Value; //RecId or Error Number
+            return $json->StrRetStatus == "Ok";
         } catch (\Exception $e) {
             echo $e->getMessage();
         }
+
+//        try {
+//            $username = '09127068288';
+//            $password = 'LMT84';
+//            $smsSoap = Melipayamak::sms('soap');
+//            $api = new MelipayamakApi($username, $password);
+//            $sms = $api->sms();
+//            $to = '09391681434';
+//            $from = '50004000850804';
+//            $response = $sms->send($to, $from, $text);
+//            $json = json_decode($response);
+//            echo $json->Value; //RecId or Error Number
+//        } catch (\Exception $e) {
+//            echo $e->getMessage();
+//        }
     }
 
     public function verifyPhoneAndLogin(Request $request)
@@ -187,18 +102,21 @@ GQL;
         //        }
         $token = OtpToken::where('receiver', $phone)->where('token', $code)->first();
         if (is_null($token)) {
-            return $this->freeResponse(false, 'توکن وجود ندارد', 401);
+            return $this->freeResponse(false, 'کد اشتباه است', 401);
         }
         if (! Carbon::createFromFormat('H:i:s', $token->expire_at)->greaterThan(Carbon::now())) {
             return $this->freeResponse(false, 'تایم تمام شده', 401);
         }
 
-        $user = Customer::where('phone', $request->input('phone'))->firstOr(function () use ($request) {
+        $email = "newCustomer".rand(100000,999999)."@example.com";
+
+        $user = Customer::where('phone', $request->input('phone'))->firstOr(function () use ($email, $request) {
 
             return Customer::create([
                 'first_name'  => 'کاربر',
                 'last_name'   => 'جدید',
                 'phone'       => $request->input('phone'),
+                'email'       => $email,
                 'token'       => md5(uniqid(rand(), true)),
                 'password'                  => bcrypt('123456789'),
                 'api_token'                 => Str::random(80),
@@ -208,73 +126,46 @@ GQL;
             ]);
         });
 
-        $email = "newCustomer".rand(100000,999999)."@example.com";
+
         if(empty($user->email)){
             $user->email = $email;
             $user->save();
         }
+        auth()->guard('customer')->login($user);
 
-        $oldPass = $user->password;
+        ///////////////////////
+        ///
 
-        $newPass = bcrypt('123456789');
-        $user->password = $newPass;
-        $user->save();
+        if (! auth()->guard('customer')->user()->status) {
+            auth()->guard('customer')->logout();
 
-        // درخواست GraphQL که می‌خواهید ارسال کنید
-        $query = <<<GQL
-mutation {
-    userLogin(input : {
-      email: "$email"
-      password: "123456789"
-    })
-    {
-      status
-      success
-      accessToken
-      tokenType
-      expiresIn
-      user {
-          id
-          name
-          email
-          password
-          apiToken
-          roleId
-          status
-          createdAt
-          updatedAt
-      }
-    }
-}
-GQL;
-
-        // ارسال درخواست HTTP به GraphQL endpoint
-        $response = Http::post('http://bagisto.test/graphql', [
-            'query' => $query,
-        ]);
-
-        // تبدیل پاسخ به JSON
-        $data = $response->json();
-dd($data);
-        // دسترسی به توکن و بازگشت پاسخ
-        $accessToken = $data['data']['userLogin']['accessToken'] ?? null;
-
-        if ($accessToken) {
-            return response()->json([
-                'status' => 'success',
-                'token' => $accessToken,
-            ]);
-        } else {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Login failed',
-            ]);
+            return $this->freeResponse('error', trans('shop::app.customers.login-form.not-activated'), 403);
         }
-        dd('ssdsd');
 
+        Event::dispatch('customer.after.login', auth()->guard()->user());
 
+        $token = auth()->guard('customer')->user()->createToken('YourTokenName')->plainTextToken;
 
-        return ['token' => $token];
+        /**
+         * Event passed to prepare cart after login.
+         */
+
+        if (core()->getConfigData('customer.settings.login_options.redirected_to_page') == 'account') {
+            return $this->dataResponse(
+                [
+                    'message' => 'success',
+                    'token' => $token,
+                    'redirect_route' => route('shop.customers.account.profile.index')
+                ]);
+
+        }
+        return $this->dataResponse(
+            [
+                'message' => 'success',
+                'token' => $token,
+                'redirect_route' => route('shop.home.index')
+            ]);
+
 
     }
 
@@ -283,25 +174,6 @@ dd($data);
         return response()->json([
             'data' => $data,
         ]);
-    }
-
-    public function checkCode(Request $request)
-    {
-        $request->validate(['phone' => 'required', 'code' => 'required']);
-        $phone = $request->input(['phone']);
-        $code = $request->input(['code']);
-dd('d');
-        $token = OtpToken::where('receiver', $phone)->where('token', $code)->first();
-
-        if (is_null($token)) {
-            return \response()->json(['message' => 'Code Or Phone is incorrect'], 403);
-        }
-
-        if (Carbon::parse(Carbon::now()->format('Y-m-d H:i:s'))->greaterThan($token->expire_at)) {
-            return \response()->json(['message' => 'Code is Expire'], 403);
-        }
-
-        return \response()->json(['message' => 'success']);
     }
 
     public function freeResponse($data, $message, $statusCode = 201): JsonResponse
