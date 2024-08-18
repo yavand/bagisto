@@ -99,13 +99,6 @@ class OtpAuthController extends APIController
         $phone = $request->input('phone');
         $code = $request->input('code');
 
-        //        if (! auth()->guard('customer')->user()->status) {
-        //            auth()->guard('customer')->logout();
-        //
-        //            return response()->json([
-        //                'message' => trans('shop::app.customers.login-form.not-activated'),
-        //            ], Response::HTTP_FORBIDDEN);
-        //        }
         $token = OtpToken::where('receiver', $phone)->where('token', $code)->first();
         if (is_null($token)) {
             return $this->freeResponse(false, 'کد اشتباه است', 401);
@@ -142,8 +135,13 @@ class OtpAuthController extends APIController
         }
 
         $oldPass = $user->password;
-        $user->password = $password;
+        $user->password = bcrypt($password);
         $user->save();
+        $loginResult = $this->graphQlService->loginCustomer($email, $password);
+        $user->password = $oldPass;
+        $user->save();
+
+        return $loginResult;
 
         auth()->guard('customer')->login($user);
 
@@ -158,9 +156,6 @@ class OtpAuthController extends APIController
 
         Event::dispatch('customer.after.login', auth()->guard()->user());
 
-        $token = auth()->guard('customer')->user()->createToken('YourTokenName')->plainTextToken;
-
-        $token = $this->graphQlService->loginCustomer($user->email, $password);
 
         /**
          * Event passed to prepare cart after login.

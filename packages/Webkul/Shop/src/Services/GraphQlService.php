@@ -13,6 +13,7 @@ class GraphQlService
     public function __construct()
     {
         $this->url = url('/') . '/graphql';
+//        $this->url = 'http::127.0.0.1/graphql';
     }
 
     public function loginCustomer($email, $password)
@@ -55,7 +56,6 @@ class GraphQlService
         $response = Http::post($this->url, [
             'query' => $query
         ]);
-
         return $response->json();
 
     }
