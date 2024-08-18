@@ -10,7 +10,7 @@
     },
     "servers": [
         {
-            "url": "http://localhost:8000",
+            "url": "http://bagisto.test/",
             "description": "Bagisto Rest API"
         }
     ],
