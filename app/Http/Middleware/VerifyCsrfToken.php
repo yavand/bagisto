@@ -20,5 +20,6 @@ class VerifyCsrfToken extends Middleware
         'api/customer/login',
         'api/customer/register',
         'api/otp/request-code',
+        'zarinpal/pay',
     ];
 }

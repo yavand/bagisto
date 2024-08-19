@@ -18,14 +18,13 @@ class ZarinpalController extends Controller
     }
 
     public function pay(Request $request){
-
-
+        $url = url('/') . "/zarinpal/verification";
         $response = zarinpal()
             ->merchantId(env('ZARINPAL_MERCHANT_ID'))
             ->amount($this->cart->grand_total)
             ->request()
             ->description('خرید از سایت')
-            ->callbackUrl('https://bagisto.test/zarinpal/verification')
+            ->callbackUrl($url)
 //            ->mobile('09123456789') //
             ->email($this->cart->customer_email)
             ->send();
