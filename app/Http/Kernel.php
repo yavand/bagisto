@@ -2,6 +2,7 @@
 
 namespace App\Http;
 
+use App\Http\Middleware\CorsMiddleware;
 use Illuminate\Foundation\Http\Kernel as HttpKernel;
 
 class Kernel extends HttpKernel
@@ -24,6 +25,7 @@ class Kernel extends HttpKernel
         \Webkul\Installer\Http\Middleware\CanInstall::class,
         \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
         \Illuminate\Session\Middleware\StartSession::class,
+        CorsMiddleware::class,
     ];
 
     /**
@@ -65,5 +67,6 @@ class Kernel extends HttpKernel
         'signed'        => \Illuminate\Routing\Middleware\ValidateSignature::class,
         'throttle'      => \Illuminate\Routing\Middleware\ThrottleRequests::class,
         'cacheResponse' => \Webkul\Shop\Http\Middleware\CacheResponse::class,
+        'solveCorsError' => CorsMiddleware::class,
     ];
 }

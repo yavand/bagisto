@@ -28,7 +28,7 @@ Route::group([], function () {
     });
 
     Route::prefix('api/zarinpal')->group(function () {
-        Route::post('/pay', [ZarinpalController::class, 'apiPay'])->name('zarinpal.api.pay');
+        Route::get('/pay/{customer_id}/{cart_id}', [ZarinpalController::class, 'apiPay'])->name('zarinpal.api.pay');
     });
 
 });

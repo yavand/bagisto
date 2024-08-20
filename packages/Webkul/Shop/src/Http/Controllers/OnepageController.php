@@ -74,6 +74,7 @@ class OnepageController extends Controller
      */
     public function success(OrderRepository $orderRepository)
     {
+
         if (! $order = $orderRepository->find(session('order_id'))) {
             return redirect()->route('shop.checkout.cart.index');
         }
@@ -97,7 +98,8 @@ class OnepageController extends Controller
             }
         }
 
-        return view('shop::checkout.success', compact('order'));
+        $referenceId = session('reference_id');
+        return view('shop::checkout.success', compact('order','referenceId'));
     }
 
     /**
