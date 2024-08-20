@@ -41,6 +41,7 @@
         "maatwebsite/excel": "^3.1.46",
         "melipayamak/laravel": "1.0.0",
         "mpdf/mpdf": "^8.2",
+        "nuwave/lighthouse": "^6.42",
         "openai-php/laravel": "^0.7.8",
         "paypal/paypal-checkout-sdk": "1.0.1",
         "pishran/zarinpal": "^4.3",

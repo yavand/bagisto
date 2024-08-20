@@ -3,10 +3,12 @@
 namespace Zarinpal\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Http;
 use Webkul\Checkout\Facades\Cart;
 use Webkul\Customer\Models\Customer;
 use Webkul\Sales\Repositories\OrderRepository;
-use Webkul\Sales\Transformers\OrderResource;
+use Webkul\Shop\Services\GraphQlService;
 
 class ZarinpalController extends Controller
 {
@@ -14,22 +16,26 @@ class ZarinpalController extends Controller
 
     public function __construct(protected OrderRepository $orderRepository)
     {
-        $this->cart = Cart::getCart();
+//        $this->cart = Cart::getCart();
     }
     public function apiPay(Request $request)
     {
-        $request->validate(['customer_id' => 'required']);
 
-        $customer = Customer::find($request->customer_id);
-        if (empty($customer))
-            return response()->json([
-                'data' => [
-                    'message' => 'شما اجازه ی دسترسی به این قسمت را ندارید'
-                ]
-            ], 403);
-        auth()->loginUsingId($customer->id);
-        $this->cart = Cart::getCart();
-        dd($this->cart);
+//        $token = trim($request->header()['authorization'][0]);
+//
+//        $t = new GraphQlService();
+//        $response = $t->getCart($token);
+//dd($response);
+
+        $request->validate(['customer_id'=>'required|exists:customers,id','cart_id'=>'required|exists:cart,id']);
+
+        $customer = Auth::guard('customer')->loginUsingId($request->customer_id);
+
+        $cart = $customer->active_carts()->where('id',$request->cart_id)->first();
+        if (!$cart)
+            return response()->json(['error'=>['message'=>'Cart Not Found']]);
+
+        $this->cart = $cart;
         $url = url('/') . "/zarinpal/verification";
         $response = zarinpal()
             ->merchantId(env('ZARINPAL_MERCHANT_ID'))
@@ -44,6 +50,7 @@ class ZarinpalController extends Controller
         if (!$response->success()) {
             return $response->error()->message();
         }
+        return $response->redirect();
     }
 
     public function pay(Request $request){
@@ -105,7 +112,7 @@ class ZarinpalController extends Controller
 //
 //        session()->flash('order_id', $order->id);
 
-        return redirect()->route('shop.checkout.onepage.success',compact('referenceId'));
+        return redirect()->route('shop.checkout.onepage.success');
 //        return $response->referenceId();
     }
 }
