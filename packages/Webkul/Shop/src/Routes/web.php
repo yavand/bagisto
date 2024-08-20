@@ -22,12 +22,16 @@ require 'customer-routes.php';
 require 'checkout-routes.php';
 
 Route::group([], function () {
-    Route::prefix('zarinpal/')->group(function () {
+    Route::prefix('zarinpal')->group(function () {
         Route::get('/pay', [ZarinpalController::class, 'pay'])->name('zarinpal.pay');
         Route::get('/verification', [ZarinpalController::class, 'verification'])->name('zarinpal.verification');
     });
-});
 
+    Route::prefix('api/zarinpal')->group(function () {
+        Route::post('/pay', [ZarinpalController::class, 'apiPay'])->name('zarinpal.api.pay')->middleware(['sanctum.locale', 'sanctum.currency']);
+    });
+
+});
 
 Route::get('/mytest',function (){
 //   \Illuminate\Support\Facades\Artisan::call('route:clear');

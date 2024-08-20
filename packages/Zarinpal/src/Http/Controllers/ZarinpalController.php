@@ -4,17 +4,46 @@ namespace Zarinpal\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Webkul\Checkout\Facades\Cart;
+use Webkul\Customer\Models\Customer;
 use Webkul\Sales\Repositories\OrderRepository;
 use Webkul\Sales\Transformers\OrderResource;
 
 class ZarinpalController extends Controller
 {
-
     private $cart;
 
     public function __construct(protected OrderRepository $orderRepository)
     {
         $this->cart = Cart::getCart();
+    }
+    public function apiPay(Request $request)
+    {
+        $request->validate(['customer_id' => 'required']);
+
+        $customer = Customer::find($request->customer_id);
+        if (empty($customer))
+            return response()->json([
+                'data' => [
+                    'message' => 'شما اجازه ی دسترسی به این قسمت را ندارید'
+                ]
+            ], 403);
+        auth()->loginUsingId($customer->id);
+        $this->cart = Cart::getCart();
+        dd($this->cart);
+        $url = url('/') . "/zarinpal/verification";
+        $response = zarinpal()
+            ->merchantId(env('ZARINPAL_MERCHANT_ID'))
+            ->amount($this->cart->grand_total)
+            ->request()
+            ->description('خرید از سایت')
+            ->callbackUrl($url)
+//            ->mobile('09123456789') //
+            ->email($this->cart->customer_email)
+            ->send();
+
+        if (!$response->success()) {
+            return $response->error()->message();
+        }
     }
 
     public function pay(Request $request){
@@ -63,18 +92,20 @@ class ZarinpalController extends Controller
 
 // پرداخت موفقیت آمیز بود
 // دریافت شماره پیگیری تراکنش و انجام امور مربوط به دیتابیس
+        $referenceId = $response->referenceId();
 
-        $cart = Cart::getCart();
 
-        $data = (new OrderResource($cart))->jsonSerialize();
+//        $cart = Cart::getCart();
+//
+//        $data = (new OrderResource($cart))->jsonSerialize();
+//
+//        $order = $this->orderRepository->create($data);
+//
+//        Cart::deActivateCart();
+//
+//        session()->flash('order_id', $order->id);
 
-        $order = $this->orderRepository->create($data);
-
-        Cart::deActivateCart();
-
-        session()->flash('order_id', $order->id);
-
-        return redirect()->route('shop.checkout.onepage.success');
+        return redirect()->route('shop.checkout.onepage.success',compact('referenceId'));
 //        return $response->referenceId();
     }
 }
