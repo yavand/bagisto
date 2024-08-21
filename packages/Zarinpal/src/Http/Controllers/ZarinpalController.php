@@ -15,7 +15,6 @@ class ZarinpalController extends Controller
 
     public function __construct(protected OrderRepository $orderRepository)
     {
-//        $this->middleware('solveCorsError');
         $this->cart = Cart::getCart();
     }
 
