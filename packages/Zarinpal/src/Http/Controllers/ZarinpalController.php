@@ -84,7 +84,9 @@ class ZarinpalController extends Controller
             Log::error('Zarinpal Error : ' . $response->error()->message());
             $errors = new \Illuminate\Support\MessageBag();
             $errors->add('field_name', $response->error()->message());
-            return redirect()->route('shop.checkout.cart.index')->withErrors($errors);
+            $url = env('FRONT_URL') . '/checkout/result?status=false&error='. $response->error()->message();
+            return redirect()->away($url);
+//            return redirect()->route('shop.checkout.cart.index')->withErrors($errors);
 
         }
 

@@ -76,7 +76,9 @@ class OnepageController extends Controller
     {
 
         if (! $order = $orderRepository->find(session('order_id'))) {
-            return redirect()->route('shop.checkout.cart.index');
+            $url = env('FRONT_URL') . '/checkout/result?status=false&error = خطا در سیستم با مدیر سیستم در ارتباط باشید' . $response->error()->message();
+            return redirect()->away($url);
+//            return redirect()->route('shop.checkout.cart.index');
         }
 
         if (
@@ -99,7 +101,9 @@ class OnepageController extends Controller
         }
 
         $referenceId = session('reference_id');
-        return view('shop::checkout.success', compact('order','referenceId'));
+        $url = env('FRONT_URL') . '/checkout/result?status=true&reference_id= ' . $referenceId;
+        return redirect()->away($url);
+//        return view('shop::checkout.success', compact('order','referenceId'));
     }
 
     /**
