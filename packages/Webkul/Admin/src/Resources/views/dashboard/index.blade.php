@@ -184,9 +184,8 @@
                         filters: {
                             channel: '',
 
-                            start: "{{ $startDate->format('Y-m-d') }}",
-
-                            end: "{{ $endDate->format('Y-m-d') }}",
+                            start: "{{ $jalaliStartDate->format('Y-m-d') }}",
+                            end: "{{ $jalaliEndDate->format('Y-m-d') }}",
                         }
                     }
                 },

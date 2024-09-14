@@ -31,38 +31,38 @@ class Dashboard
      */
     public function getOverAllStats(): array
     {
-//        $start = request()->input('start');
-//        $miladi = true;
-//        if ($start) {
-//            try {
-//                $date = Carbon::parse($start);
-//            } catch (\Exception $e) {
-//                $miladi = false;
-//            }
-//        }
-//        if (request()->has('start')) {
-//            if (Str::contains(request()->input('start'), '/'))
-//                $sep = '/';
-//            else
-//                $sep = '-';
-//
-//            $start = explode($sep, request()->input('start'));
-//            $start = Verta::jalaliToGregorian($start[0], $start[1], $start[2]);
-//            $start = implode('-', $start);
-//
-//            if (Str::contains(request()->input('end'), '/'))
-//                $sep = '/';
-//            else
-//                $sep = '-';
-//            $end = explode($sep, request()->input('end'));
-//            $end = Verta::jalaliToGregorian($end[0], $end[1], $end[2]);
-//            $end = implode('-', $end);
-//
-//            request()->merge([
-//                'start' => $start,
-//                'end' => $end,
-//            ]);
-//        }
+        $start = request()->input('start');
+        $miladi = true;
+        if ($start) {
+            try {
+                $date = Carbon::parse($start);
+            } catch (\Exception $e) {
+                $miladi = false;
+            }
+        }
+        if (request()->has('start')) {
+            if (Str::contains(request()->input('start'), '/'))
+                $sep = '/';
+            else
+                $sep = '-';
+
+            $start = explode($sep, request()->input('start'));
+            $start = Verta::jalaliToGregorian($start[0], $start[1], $start[2]);
+            $start = implode('-', $start);
+
+            if (Str::contains(request()->input('end'), '/'))
+                $sep = '/';
+            else
+                $sep = '-';
+            $end = explode($sep, request()->input('end'));
+            $end = Verta::jalaliToGregorian($end[0], $end[1], $end[2]);
+            $end = implode('-', $end);
+
+            request()->merge([
+                'start' => $start,
+                'end' => $end,
+            ]);
+        }
 //        dump(request()->all());
         return [
             'total_customers'       => $this->customerReporting->getTotalCustomersProgress(),
