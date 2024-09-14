@@ -21,6 +21,7 @@
     "mitt": "^3.0.1",
     "vee-validate": "^4.9.1",
     "vue-flatpickr": "^2.3.0",
+    "vue3-persian-datetime-picker": "^1.2.2",
     "vuedraggable": "^4.1.0"
   }
 }

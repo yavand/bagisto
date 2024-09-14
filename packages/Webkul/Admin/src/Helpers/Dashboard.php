@@ -2,9 +2,11 @@
 
 namespace Webkul\Admin\Helpers;
 
+use Hekmatinasser\Verta\Verta;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 use Webkul\Admin\Helpers\Reporting\Customer;
 use Webkul\Admin\Helpers\Reporting\Product;
 use Webkul\Admin\Helpers\Reporting\Sale;
@@ -29,6 +31,39 @@ class Dashboard
      */
     public function getOverAllStats(): array
     {
+//        $start = request()->input('start');
+//        $miladi = true;
+//        if ($start) {
+//            try {
+//                $date = Carbon::parse($start);
+//            } catch (\Exception $e) {
+//                $miladi = false;
+//            }
+//        }
+//        if (request()->has('start')) {
+//            if (Str::contains(request()->input('start'), '/'))
+//                $sep = '/';
+//            else
+//                $sep = '-';
+//
+//            $start = explode($sep, request()->input('start'));
+//            $start = Verta::jalaliToGregorian($start[0], $start[1], $start[2]);
+//            $start = implode('-', $start);
+//
+//            if (Str::contains(request()->input('end'), '/'))
+//                $sep = '/';
+//            else
+//                $sep = '-';
+//            $end = explode($sep, request()->input('end'));
+//            $end = Verta::jalaliToGregorian($end[0], $end[1], $end[2]);
+//            $end = implode('-', $end);
+//
+//            request()->merge([
+//                'start' => $start,
+//                'end' => $end,
+//            ]);
+//        }
+//        dump(request()->all());
         return [
             'total_customers'       => $this->customerReporting->getTotalCustomersProgress(),
             'total_orders'          => $this->saleReporting->getTotalOrdersProgress(),
@@ -154,6 +189,11 @@ class Dashboard
         return $this->saleReporting->getStartDate();
     }
 
+    public function getJalaliStartDate(): Verta
+    {
+        return \verta($this->saleReporting->getStartDate()->toDate());
+    }
+
     /**
      * Get the end date.
      *
@@ -162,6 +202,11 @@ class Dashboard
     public function getEndDate(): Carbon
     {
         return $this->saleReporting->getEndDate();
+    }
+
+    public function getJalaliEndDate(): Verta
+    {
+        return \verta($this->saleReporting->getEndDate()->toDate());
     }
 
     /**

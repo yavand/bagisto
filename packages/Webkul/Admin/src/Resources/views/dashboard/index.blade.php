@@ -136,13 +136,9 @@
                     </x-admin::dropdown>
                 </template>
 
-                <x-admin::persian-picker.date class="!w-[140px]" ::allow-input="false">
-                    <input
-                        class="flex min-h-[39px] w-full rounded-md border px-3 py-2 text-sm text-gray-600 transition-all hover:border-gray-400 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300 dark:hover:border-gray-400"
-                        v-model="filters.start"
-                        placeholder="@lang('admin::app.dashboard.index.start-date')"
-                    />
-                </x-admin::persian-picker.date>
+
+                <persian-date-picker v-model="filters.start" :allow-input="false"></persian-date-picker>
+                <persian-date-picker v-model="filters.end" :allow-input="false"></persian-date-picker>
 
 {{--                <x-admin::persian-picker.date class="!w-[140px]" ::allow-input="false">--}}
 {{--                    <input--}}
@@ -161,13 +157,13 @@
 {{--                    />--}}
 {{--                </x-admin::flat-picker.date>--}}
 
-                <x-admin::flat-picker.date class="!w-[140px]" ::allow-input="false">
-                    <input
-                        class="flex min-h-[39px] w-full rounded-md border px-3 py-2 text-sm text-gray-600 transition-all hover:border-gray-400 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300 dark:hover:border-gray-400"
-                        v-model="filters.end"
-                        placeholder="@lang('admin::app.dashboard.index.end-date')"
-                    />
-                </x-admin::flat-picker.date>
+{{--                <x-admin::flat-picker.date class="!w-[140px]" ::allow-input="false">--}}
+{{--                    <input--}}
+{{--                        class="flex min-h-[39px] w-full rounded-md border px-3 py-2 text-sm text-gray-600 transition-all hover:border-gray-400 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300 dark:hover:border-gray-400"--}}
+{{--                        v-model="filters.end"--}}
+{{--                        placeholder="@lang('admin::app.dashboard.index.end-date')"--}}
+{{--                    />--}}
+{{--                </x-admin::flat-picker.date>--}}
             </div>
         </script>
 
@@ -198,6 +194,7 @@
                 watch: {
                     filters: {
                         handler() {
+                            console.log(this.filters);
                             this.$emitter.emit('reporting-filter-updated', this.filters);
                         },
 

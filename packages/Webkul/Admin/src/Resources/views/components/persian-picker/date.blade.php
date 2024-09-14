@@ -1,23 +1,15 @@
-<v-persian-date-picker {{ $attributes }}>
+<persian-date-picker {{ $attributes }}>
     {{ $slot }}
-</v-persian-date-picker>
-
+</persian-date-picker>
 @pushOnce('scripts')
     <script
         type="text/x-template"
-        id="v-persian-date-picker-template"
-    >
-        <span class="relative inline-block w-full">
-
-            <slot></slot>
-
-            <i class="icon-calendar pointer-events-none absolute top-1/2 -translate-y-1/2 text-2xl text-gray-400 ltr:right-2 rtl:left-2"></i>
-        </span>
+        id="v-persian-date-picker-template">
+        <slot></slot>
     </script>
 
     <script type="module">
-        console.log('in component');
-        app.component('v-persian-date-picker', {
+        app.component('persian-date-picker', {
             template: '#v-persian-date-picker-template',
             props: {
                 name: String,
@@ -26,6 +18,7 @@
                     type: Boolean,
                     default: true,
                 },
+                modelValue: String,
                 disable: Array,
                 minDate: String,
                 maxDate: String,
@@ -58,21 +51,17 @@
                     let self = this;
 
                     return {
-                        allowInput: this.allowInput ?? true,
-                        disable: this.disable ?? [],
-                        minDate: this.minDate ?? '',
-                        maxDate: this.maxDate ?? '',
-                        dateFormat: "Y-m-d",
-                        weekNumbers: true,
-
                         format: 'YYYY-MM-DD HH:mm',
-                        displayFormat: 'jYYYY-jMM-jDD HH:mm',
+                        displayFormat: 'jYYYY-jMM-jDD',
                         editable: false,
-                        inputClass: 'form-control my-custom-class-name',
+                        inputClass: 'flex min-h-[39px] w-full rounded-md border px-3 py-2 text-sm text-gray-600 transition-all hover:border-gray-400 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300 dark:hover:border-gray-400',
                         placeholder: 'Please select a date',
                         altFormat: 'YYYY-MM-DD HH:mm',
-                        color: '#00acc1',
-                        autoSubmit: true,
+                        color: '#2214d8',
+                        autoSubmit: false,
+                        //...
+                        //... And whatever you want to set as default.
+                        //...
 
                         onChange: function(selectedDates, dateStr, instance) {
                             self.$emit("onChange", dateStr);
@@ -81,9 +70,8 @@
                 },
 
                 activate: function(options) {
-                    let element = this.$el.getElementsByTagName("input")[0];
-                    console.log(options);
-                    this.datepicker = new VuePersianPicker();
+                    //let element = this.$el.getElementsByTagName("input")[0];
+                    this.datepicker = new PersianDatetimePicker();
                 },
                 clear: function() {
                     this.datepicker.clear();

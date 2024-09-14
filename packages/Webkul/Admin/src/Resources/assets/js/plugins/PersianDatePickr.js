@@ -1,7 +1,9 @@
-import VuePersianDatetimePicker from 'vue-persian-datetime-picker';
-console.log('in plugins');
+import Vue3PersianDatetimePicker from 'vue3-persian-datetime-picker'
 export default {
     install: (app) => {
-        window.VuePersianPicker = VuePersianDatetimePicker;
+        window.PersianDatetimePicker=Vue3PersianDatetimePicker;
+        app.use(Vue3PersianDatetimePicker, {
+            name: 'PersianDatePicker',
+        })
     },
 };

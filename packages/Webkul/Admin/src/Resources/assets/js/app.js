@@ -7,7 +7,6 @@ import.meta.glob(["../images/**", "../fonts/**"]);
  * Main vue bundler.
  */
 import { createApp } from "vue/dist/vue.esm-bundler";
-console.log('in app . js');
 /**
  * Main root application registry.
  */
