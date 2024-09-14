@@ -3,7 +3,7 @@ import vue from "@vitejs/plugin-vue";
 import laravel from "laravel-vite-plugin";
 import path from "path";
 
-export default defineConfig(({ mode }) => {
+export default defineConfig(({mode}) => {
     const envDir = "../../../";
 
     Object.assign(process.env, loadEnv(mode, envDir));
@@ -35,6 +35,15 @@ export default defineConfig(({ mode }) => {
                 refresh: true,
             }),
         ],
+        resolve: {
+            mainFields: [
+                'browser',
+                'module',
+                'main',
+                'jsnext:main',
+                'jsnext'
+            ]
+        },
 
         experimental: {
             renderBuiltUrl(filename, { hostId, hostType, type }) {

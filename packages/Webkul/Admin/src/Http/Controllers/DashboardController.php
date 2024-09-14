@@ -35,9 +35,15 @@ class DashboardController extends Controller
      */
     public function index()
     {
+//        dd($this->dashboardHelper->getJalaliStartDate());
         return view('admin::dashboard.index')->with([
             'startDate' => $this->dashboardHelper->getStartDate(),
             'endDate'   => $this->dashboardHelper->getEndDate(),
+
+            'jalaliStartDate' => $this->dashboardHelper->getJalaliStartDate(),
+            'jalaliEndDate'   => $this->dashboardHelper->getJalaliEndDate(),
+
+
         ]);
     }
 

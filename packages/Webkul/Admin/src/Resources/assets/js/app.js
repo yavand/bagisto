@@ -7,7 +7,6 @@ import.meta.glob(["../images/**", "../fonts/**"]);
  * Main vue bundler.
  */
 import { createApp } from "vue/dist/vue.esm-bundler";
-
 /**
  * Main root application registry.
  */
@@ -44,6 +43,7 @@ import Axios from "./plugins/axios";
 import CreateElement from "./plugins/createElement";
 import Emitter from "./plugins/emitter";
 import Flatpickr from "./plugins/flatpickr";
+import VuePersianDatetimePicker from "./plugins/PersianDatePickr";
 import VeeValidate from "./plugins/vee-validate";
 import Draggable from "./plugins/draggable";
 
@@ -53,6 +53,7 @@ import Draggable from "./plugins/draggable";
     CreateElement,
     Emitter,
     Flatpickr,
+    VuePersianDatetimePicker,
     VeeValidate,
     Draggable,
 ].forEach((plugin) => app.use(plugin));
