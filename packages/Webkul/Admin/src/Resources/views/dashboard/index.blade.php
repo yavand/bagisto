@@ -136,7 +136,6 @@
                     </x-admin::dropdown>
                 </template>
 
-
                 <persian-date-picker v-model="filters.start" :allow-input="false"></persian-date-picker>
                 <persian-date-picker v-model="filters.end" :allow-input="false"></persian-date-picker>
 
