@@ -33,10 +33,10 @@
             <div class="relative flex w-[525px] max-w-[525px] items-center max-lg:w-[400px] ltr:ml-2.5 rtl:mr-2.5">
                 <i class="icon-search absolute top-1.5 flex items-center text-2xl ltr:left-3 rtl:right-3"></i>
 
-                <input
-                    type="text"
+                <input 
+                    type="text" 
                     class="block w-full rounded-lg border bg-white px-10 py-1.5 leading-6 text-gray-600 transition-all hover:border-gray-400 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300"
-                    placeholder="@lang('admin::app.components.layouts.header.mega-search.title')"
+                    placeholder="@lang('admin::app.components.layouts.header.mega-search.title')" 
                 >
             </div>
         </v-mega-search>
@@ -52,23 +52,23 @@
             </div>
         </v-dark>
 
-{{--        <a--}}
-{{--            href="{{ route('shop.home.index') }}"--}}
-{{--            target="_blank"--}}
-{{--            class="flex"--}}
-{{--        >--}}
-{{--            <span--}}
-{{--                class="icon-store cursor-pointer rounded-md p-1.5 text-2xl transition-all hover:bg-gray-100 dark:hover:bg-gray-950"--}}
-{{--                title="@lang('admin::app.components.layouts.header.visit-shop')"--}}
-{{--            >--}}
-{{--            </span>--}}
-{{--        </a>--}}
+        <a 
+            href="{{ route('shop.home.index') }}" 
+            target="_blank"
+            class="flex"
+        >
+            <span 
+                class="icon-store cursor-pointer rounded-md p-1.5 text-2xl transition-all hover:bg-gray-100 dark:hover:bg-gray-950"
+                title="@lang('admin::app.components.layouts.header.visit-shop')"
+            >
+            </span>
+        </a>
 
        <!-- Notification Component -->
         <v-notifications {{ $attributes }}>
             <span class="relative flex">
-                <span
-                    class="icon-notification cursor-pointer rounded-md p-1.5 text-2xl transition-all hover:bg-gray-100 dark:hover:bg-gray-950"
+                <span 
+                    class="icon-notification cursor-pointer rounded-md p-1.5 text-2xl transition-all hover:bg-gray-100 dark:hover:bg-gray-950" 
                     title="@lang('admin::app.components.layouts.header.notifications')"
                 >
                 </span>
@@ -94,18 +94,18 @@
 
             <!-- Admin Dropdown -->
             <x-slot:content class="!p-0">
-{{--                <div class="flex items-center gap-1.5 border border-b-gray-300 px-5 py-2.5 dark:border-gray-800">--}}
-{{--                    <img--}}
-{{--                        src="{{ url('cache/logo/bagisto.png') }}"--}}
-{{--                        width="24"--}}
-{{--                        height="24"--}}
-{{--                    />--}}
+                <div class="flex items-center gap-1.5 border border-b-gray-300 px-5 py-2.5 dark:border-gray-800">
+                    <img
+                        src="{{ url('cache/logo/bagisto.png') }}"
+                        width="24"
+                        height="24"
+                    />
 
-{{--                    <!-- Version -->--}}
-{{--                    <p class="text-gray-400">--}}
-{{--                        @lang('admin::app.components.layouts.header.app-version', ['version' => 'v' . core()->version()])--}}
-{{--                    </p>--}}
-{{--                </div>--}}
+                    <!-- Version -->
+                    <p class="text-gray-400">
+                        @lang('admin::app.components.layouts.header.app-version', ['version' => 'v' . core()->version()])
+                    </p>
+                </div>
 
                 <div class="grid gap-1 pb-2.5">
                     <a
@@ -173,7 +173,7 @@
                             class="flex gap-2.5 p-1.5 items-center cursor-pointer hover:rounded-lg {{ $menuItem->isActive() == 'active' ? 'bg-blue-600 rounded-lg' : ' hover:bg-gray-100 hover:dark:bg-gray-950' }} peer"
                         >
                             <span class="{{ $menuItem->getIcon() }} text-2xl {{ $menuItem->isActive() ? 'text-white' : ''}}"></span>
-
+                            
                             <p class="text-gray-600 dark:text-gray-300 font-semibold whitespace-nowrap group-[.sidebar-collapsed]/container:hidden {{ $menuItem->isActive() ? 'text-white' : ''}}">
                                 {{ $menuItem->getName() }}
                             </p>
@@ -207,7 +207,7 @@
         <div class="relative flex w-[525px] max-w-[525px] items-center max-lg:w-[400px] ltr:ml-2.5 rtl:mr-2.5">
             <i class="icon-search absolute top-1.5 flex items-center text-2xl ltr:left-3 rtl:right-3"></i>
 
-            <input
+            <input 
                 type="text"
                 class="peer block w-full rounded-lg border bg-white px-10 py-1.5 leading-6 text-gray-600 transition-all hover:border-gray-400 focus:border-gray-400 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300 dark:hover:border-gray-400 dark:focus:border-gray-400"
                 :class="{'border-gray-400': isDropdownOpen}"
@@ -255,7 +255,7 @@
                                     >
                                         <template v-if="! product.images.length">
                                             <img src="{{ bagisto_asset('images/product-placeholders/front.svg') }}">
-
+                                        
                                             <p class="absolute bottom-1.5 w-full text-center text-[6px] font-semibold text-gray-400">
                                                 @lang('admin::app.catalog.products.edit.types.grouped.image-placeholder')
                                             </p>
@@ -447,19 +447,19 @@
                             is_active: true,
                             endpoint: "{{ route('admin.catalog.products.search') }}"
                         },
-
+                        
                         orders: {
                             key: 'orders',
                             title: "@lang('admin::app.components.layouts.header.mega-search.orders')",
                             endpoint: "{{ route('admin.sales.orders.search') }}"
                         },
-
+                        
                         categories: {
                             key: 'categories',
                             title: "@lang('admin::app.components.layouts.header.mega-search.categories')",
                             endpoint: "{{ route('admin.catalog.categories.search') }}"
                         },
-
+                        
                         customers: {
                             key: 'customers',
                             title: "@lang('admin::app.components.layouts.header.mega-search.customers')",
@@ -509,7 +509,7 @@
                     let self = this;
 
                     this.isLoading = true;
-
+                    
                     this.$axios.get(this.tabs[this.activeTab].endpoint, {
                             params: {query: this.searchTerm}
                         })
@@ -540,11 +540,11 @@
             <x-slot:toggle>
                 <span class="relative flex">
                     <span
-                        class="icon-notification text-red cursor-pointer rounded-md p-1.5 text-2xl transition-all hover:bg-gray-100 dark:hover:bg-gray-950"
+                        class="icon-notification text-red cursor-pointer rounded-md p-1.5 text-2xl transition-all hover:bg-gray-100 dark:hover:bg-gray-950" 
                         title="@lang('admin::app.components.layouts.header.notifications')"
                     >
                     </span>
-
+                
                     <span
                         class="absolute -top-2 flex h-5 min-w-5 cursor-pointer items-center justify-center rounded-full bg-blue-600 p-1.5 text-[10px] font-semibold leading-[9px] text-white ltr:left-5 rtl:right-5"
                         v-if="totalUnRead"

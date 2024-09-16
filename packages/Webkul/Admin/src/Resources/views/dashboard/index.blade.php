@@ -33,14 +33,14 @@
             {!! view_render_event('bagisto.admin.dashboard.overall_details.before') !!}
 
             <!-- Overall Details -->
-{{--            <div class="flex flex-col gap-2">--}}
-{{--                <p class="text-base font-semibold text-gray-600 dark:text-gray-300">--}}
-{{--                    @lang('admin::app.dashboard.index.overall-details')--}}
-{{--                </p>--}}
+            <div class="flex flex-col gap-2">
+                <p class="text-base font-semibold text-gray-600 dark:text-gray-300">
+                    @lang('admin::app.dashboard.index.overall-details')
+                </p>
 
-{{--                <!-- Over All Details Section -->--}}
-{{--                @include('admin::dashboard.over-all-details')--}}
-{{--            </div>--}}
+                <!-- Over All Details Section -->
+                @include('admin::dashboard.over-all-details')
+            </div>
 
             {!! view_render_event('bagisto.admin.dashboard.overall_details.after') !!}
 
@@ -122,17 +122,17 @@
 
                                 <span class="icon-sort-down text-2xl"></span>
                             </button>
-                            </x-slot>
+                        </x-slot>
 
-                            <x-slot:menu class="!p-0 shadow-[0_5px_20px_rgba(0,0,0,0.15)] dark:border-gray-800">
-                                <x-admin::dropdown.menu.item
-                                    v-for="channel in channels"
-                                    ::class="{'bg-gray-100 dark:bg-gray-950': channel.code == filters.channel}"
-                                    @click="filters.channel = channel.code"
-                                >
-                                    @{{ channel.name }}
-                                </x-admin::dropdown.menu.item>
-                                </x-slot>
+                        <x-slot:menu class="!p-0 shadow-[0_5px_20px_rgba(0,0,0,0.15)] dark:border-gray-800">
+                            <x-admin::dropdown.menu.item
+                                v-for="channel in channels"
+                                ::class="{'bg-gray-100 dark:bg-gray-950': channel.code == filters.channel}"
+                                @click="filters.channel = channel.code"
+                            >
+                                @{{ channel.name }}
+                            </x-admin::dropdown.menu.item>
+                        </x-slot>
                     </x-admin::dropdown>
                 </template>
 
@@ -140,30 +140,30 @@
                 <persian-date-picker v-model="filters.start" :allow-input="false"></persian-date-picker>
                 <persian-date-picker v-model="filters.end" :allow-input="false"></persian-date-picker>
 
-                {{--                <x-admin::persian-picker.date class="!w-[140px]" ::allow-input="false">--}}
-                {{--                    <input--}}
-                {{--                        class="flex min-h-[39px] w-full rounded-md border px-3 py-2 text-sm text-gray-600 transition-all hover:border-gray-400 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300 dark:hover:border-gray-400"--}}
-                {{--                        v-model="filters.end"--}}
-                {{--                        placeholder="@lang('admin::app.dashboard.index.start-date')"--}}
-                {{--                    />--}}
-                {{--                </x-admin::persian-picker.date>--}}
+{{--                <x-admin::persian-picker.date class="!w-[140px]" ::allow-input="false">--}}
+{{--                    <input--}}
+{{--                        class="flex min-h-[39px] w-full rounded-md border px-3 py-2 text-sm text-gray-600 transition-all hover:border-gray-400 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300 dark:hover:border-gray-400"--}}
+{{--                        v-model="filters.end"--}}
+{{--                        placeholder="@lang('admin::app.dashboard.index.start-date')"--}}
+{{--                    />--}}
+{{--                </x-admin::persian-picker.date>--}}
 
 
-                {{--                <x-admin::flat-picker.date class="!w-[140px]" ::allow-input="false">--}}
-                {{--                    <input--}}
-                {{--                        class="flex min-h-[39px] w-full rounded-md border px-3 py-2 text-sm text-gray-600 transition-all hover:border-gray-400 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300 dark:hover:border-gray-400"--}}
-                {{--                        v-model="filters.start"--}}
-                {{--                        placeholder="@lang('admin::app.dashboard.index.start-date')"--}}
-                {{--                    />--}}
-                {{--                </x-admin::flat-picker.date>--}}
+{{--                <x-admin::flat-picker.date class="!w-[140px]" ::allow-input="false">--}}
+{{--                    <input--}}
+{{--                        class="flex min-h-[39px] w-full rounded-md border px-3 py-2 text-sm text-gray-600 transition-all hover:border-gray-400 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300 dark:hover:border-gray-400"--}}
+{{--                        v-model="filters.start"--}}
+{{--                        placeholder="@lang('admin::app.dashboard.index.start-date')"--}}
+{{--                    />--}}
+{{--                </x-admin::flat-picker.date>--}}
 
-                {{--                <x-admin::flat-picker.date class="!w-[140px]" ::allow-input="false">--}}
-                {{--                    <input--}}
-                {{--                        class="flex min-h-[39px] w-full rounded-md border px-3 py-2 text-sm text-gray-600 transition-all hover:border-gray-400 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300 dark:hover:border-gray-400"--}}
-                {{--                        v-model="filters.end"--}}
-                {{--                        placeholder="@lang('admin::app.dashboard.index.end-date')"--}}
-                {{--                    />--}}
-                {{--                </x-admin::flat-picker.date>--}}
+{{--                <x-admin::flat-picker.date class="!w-[140px]" ::allow-input="false">--}}
+{{--                    <input--}}
+{{--                        class="flex min-h-[39px] w-full rounded-md border px-3 py-2 text-sm text-gray-600 transition-all hover:border-gray-400 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300 dark:hover:border-gray-400"--}}
+{{--                        v-model="filters.end"--}}
+{{--                        placeholder="@lang('admin::app.dashboard.index.end-date')"--}}
+{{--                    />--}}
+{{--                </x-admin::flat-picker.date>--}}
             </div>
         </script>
 
@@ -179,15 +179,15 @@
                                 code: ''
                             },
                             ...@json(core()->getAllChannels()),
-                ],
+                        ],
 
-                    filters: {
-                        channel: '',
+                        filters: {
+                            channel: '',
 
                             start: "{{ $jalaliStartDate->format('Y-m-d') }}",
                             end: "{{ $jalaliEndDate->format('Y-m-d') }}",
+                        }
                     }
-                }
                 },
 
                 watch: {
